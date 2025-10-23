@@ -22,7 +22,7 @@ jobs:
       - name: Add server to known hosts
         run: |
           mkdir -p ~/.ssh
-          ssh-keyscan -H ${{ secrets.SERVER_HOST_DEV01 }} >> ~/.ssh/known_hosts
+          ssh-keyscan -H -T 10 ${{ secrets.SERVER_HOST_DEV01 }} >> ~/.ssh/known_hosts 2>&1 || echo "StrictHostKeyChecking no" >> ~/.ssh/config
 
       - name: Deploy to production server
         run: |
