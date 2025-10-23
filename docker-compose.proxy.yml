@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  mrm-proxy:
+    image: nginx:alpine
+    container_name: mrm-proxy
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      - ./nginx-proxy.conf:/etc/nginx/conf.d/default.conf:ro
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=aleff-public"
+      - "traefik.http.routers.mrm-proxy.rule=Host(`mrm.a25.com.br`)"
+      - "traefik.http.routers.mrm-proxy.entrypoints=websecure"
+      - "traefik.http.routers.mrm-proxy.tls=true"
+      - "traefik.http.routers.mrm-proxy.tls.certresolver=letsencrypt"
+      - "traefik.http.services.mrm-proxy.loadbalancer.server.port=80"
+      - "traefik.http.middlewares.mrm-proxy-headers.headers.customResponseHeaders.X-Frame-Options=SAMEORIGIN"
+      - "traefik.http.middlewares.mrm-proxy-headers.headers.customResponseHeaders.X-Content-Type-Options=nosniff"
+      - "traefik.http.middlewares.mrm-proxy-headers.headers.customResponseHeaders.X-XSS-Protection=1; mode=block"
+      - "traefik.http.routers.mrm-proxy.middlewares=mrm-proxy-headers"
+
+networks:
+  aleff-public:
+    external: true

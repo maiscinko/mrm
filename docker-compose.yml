@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  mrm-saas:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mrm-saas
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_APP_URL=https://mrm.a25.com.br
+    networks:
+      - aleff-public
+    labels:
+      # Traefik enable
+      - "traefik.enable=true"
+      - "traefik.docker.network=aleff-public"
+
+      # HTTP Router
+      - "traefik.http.routers.mrm.rule=Host(`mrm.a25.com.br`)"
+      - "traefik.http.routers.mrm.entrypoints=websecure"
+      - "traefik.http.routers.mrm.tls=true"
+      - "traefik.http.routers.mrm.tls.certresolver=letsencrypt"
+
+      # Service
+      - "traefik.http.services.mrm.loadbalancer.server.port=3000"
+
+      # Middlewares (security headers + forwarded headers)
+      - "traefik.http.middlewares.mrm-headers.headers.customResponseHeaders.X-Frame-Options=SAMEORIGIN"
+      - "traefik.http.middlewares.mrm-headers.headers.customResponseHeaders.X-Content-Type-Options=nosniff"
+      - "traefik.http.middlewares.mrm-headers.headers.customResponseHeaders.X-XSS-Protection=1; mode=block"
+      - "traefik.http.middlewares.mrm-headers.headers.customRequestHeaders.X-Forwarded-Proto=https"
+      - "traefik.http.middlewares.mrm-headers.headers.customRequestHeaders.X-Forwarded-Host=mrm.a25.com.br"
+      - "traefik.http.routers.mrm.middlewares=mrm-headers"
+
+networks:
+  aleff-public:
+    external: true

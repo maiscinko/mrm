@@ -1,0 +1,935 @@
+{
+  "prd_version": "1.1",
+  "product": {
+    "name": "MRM (Mentoring Relationship Manager)",
+    "codename": "mrm",
+    "category": "SaaS B2B - CRM for Mentors",
+    "innovation_claim": "Primeiro CRM específico para mentores com IA contextual de sessão",
+    "priority": 1,
+    "status": "discovery"
+  },
+  "strategic": {
+    "vision": {
+      "one_liner": "O sistema que ajuda o mentor a lembrar, provocar e renovar",
+      "long_description": "MRM é um CRM premium com IA contextual que centraliza todas as relações mentor-mentorado. Transforma sessões dispersas em histórico estruturado, entregáveis visíveis e renovações previsíveis. Clareza é poder. Relacionamento é resultado.",
+      "market_opportunity": "Mercado global de mentoria executiva/empresarial estimado em $15B+ (2024). Segment premium (mentorias $5k-50k/ano) crescendo 25%/ano pós-COVID. MLS (Mentoring League Society) como beachhead market - rede fechada, alta disposição pagar, marca forte."
+    },
+    "target_market": {
+      "primary_segment": "Mentores profissionais premium (executivos, empresariais, carreira) que cobram $5k-50k/ano por mentorado",
+      "company_size": "Mentores individuais ou pequenas consultorias (1-3 mentores, 5-50 mentorados ativos)",
+      "industry": ["Executive Coaching", "Business Mentoring", "Leadership Development", "Career Coaching", "MLS (Mentoring League Society)"],
+      "geography": "Global (começando Brasil via MLS), depois EUA/Europa",
+      "annual_revenue_range": "Mentores faturando $50k-500k/ano"
+    },
+    "user_personas": [
+      {
+        "name": "Maria - Mentor Executivo MLS",
+        "role": "Mentor profissional certificado MLS, 10 mentorados ativos, foco liderança empresarial",
+        "pain_points": [
+          "Perde contexto entre sessões (mentorado disse X há 2 meses, não lembra)",
+          "Não consegue provar valor entregue (mentorado questiona ROI)",
+          "Renovação inconsistente (30% não renovam por falta clareza progresso)",
+          "Prep sessões toma 30-60 min (reler anotações dispersas)",
+          "Sem visibilidade geral portfólio (quem está em risco não renovar?)"
+        ],
+        "goals": [
+          "Entregar valor mensurável e visível aos mentorados",
+          "Renovar >80% mentorias (receita previsível)",
+          "Crescer reputação via resultados comprovados",
+          "Economizar 50% tempo prep sessões",
+          "Escalar de 10 para 20 mentorados sem perder qualidade"
+        ],
+        "day_in_life": "Sessões 1-2h cada, 3-5x/semana (terças/quintas concentrado). Precisa prep rápida 10-15 min antes sessão: ler resumo IA últimas sessões + entregáveis pendentes + perguntas provocativas. Pós-sessão: input notas 5-10 min, atualizar entregáveis. Sextas: review semanal portfólio (quem avançou, quem travou, quem precisa atenção)."
+      },
+      {
+        "name": "Carlos - Mentor Empresarial Tech",
+        "role": "Ex-CTO, agora mentor startups, 15 mentorados (founders early-stage)",
+        "pain_points": [
+          "Mentorados trazem problemas repetidos (esqueceram o que já discutiram)",
+          "Difícil medir impacto real (startup cresceu por mentoria ou mercado?)",
+          "Renovação baseada 'feeling' (não tem dados concretos progresso)",
+          "Anotações em 3 lugares (Notion, Evernote, papel)"
+        ],
+        "goals": [
+          "Ajudar founders crescerem de forma mensurável (revenue, team, product)",
+          "Ter histórico completo para propor próximos passos estratégicos",
+          "Renovar mentorias mostrando entregas concretas últimos 6 meses",
+          "Reduzir tempo administrativo (foco em valor, não gestão)"
+        ],
+        "day_in_life": "Sessões 1h, 4x/semana. Prep: revisar pitch deck última versão + métricas startup + anotações sessão anterior. Pós: documentar decisões tomadas + próximos passos founder + entregas cobrar próxima sessão. Mensalmente: gerar relatório progresso (mostrar evolução vs baseline)."
+      }
+    ],
+    "problem": {
+      "pain_point_headline": "Mentores perdem contexto entre sessões e não conseguem provar valor entregue",
+      "pain_point_detailed": "Mentores profissionais gerenciam 5-20 mentorados simultaneamente. Cada mentorado tem sessões quinzenais/mensais, mas mentor não consegue lembrar contexto completo (o que foi dito há 2 meses, quais entregáveis foram combinados, qual evolução real). Resultado: sessões começam com 'como você está?' genérico, perdem 20 min recontextualizando, mentorado sente falta de continuidade. Na hora renovar contrato, mentor não tem dados concretos mostrar valor entregue (apenas 'feeling'). 30-40% mentorados não renovam por falta clareza ROI.",
+      "current_alternatives": [
+        "Excel/Google Sheets manual (planilhas por mentorado)",
+        "Notion/Evernote (páginas dispersas)",
+        "CRMs genéricos (Pipedrive, HubSpot, Monday) adaptados",
+        "Anotações papel/caderno físico",
+        "Memória pura (não documenta nada)"
+      ],
+      "why_alternatives_fail": "Excel: não escala, sem IA, trabalhoso manter atualizado. Notion: informação dispersa, busca ruim, sem insights automáticos. CRMs genéricos: feitos para vendas (pipeline deals), não entendem contexto mentoria (sessões, entregáveis, renovação baseada valor). Papel: impossível buscar histórico, não compartilha progresso com mentorado. Memória: falha humana inevitável com >5 mentorados.",
+      "cost_of_inaction": "Mentorado sente falta clareza e continuidade → não renova (perda $5k-15k/mentorado/ano). Mentor não consegue escalar (limitado a 5-8 mentorados com qualidade). Reputação danificada (mentorados reclamam falta follow-up). Oportunidade perdida: IA poderia sugerir insights que mentor não viu sozinho."
+    },
+    "solution": {
+      "value_proposition": "Board visual + IA contextual + Entregáveis rastreados + Renovação automática = Mentor vê tudo que importa em 10 segundos e age com clareza cirúrgica",
+      "unique_differentiation": "Única solução que combina (1) CRM específico mentoria (não vendas), (2) IA contextual que lê histórico completo e sugere próximos passos, (3) Sistema renovação automática baseado entregas + progresso visível",
+      "key_benefits": [
+        "Controle total: Board visual mostra todos mentorados, status, % progresso, dias restantes - visão 360° instantânea",
+        "Memória perfeita: IA lê todas sessões anteriores e resume 'Na sessão 3, mentorado disse X. Deseja explorar isso hoje?'",
+        "Valor visível: Gráficos mostram evolução mentorado (clareza inicial 3/10 → atual 8/10, 12 entregáveis concluídos)",
+        "Renovação previsível: Sistema alerta 'Faltam 18 dias fim ciclo' + sugere plano fase 2 baseado gaps identificados",
+        "Tempo economizado: Prep sessões reduz de 30-60 min para 5-10 min (IA já contextualizou tudo)"
+      ],
+      "success_outcome": "Mentor vê progresso claro cada mentorado, mentorado sente valor tangível (relatório trimestral mostra evolução), renovação >80% (vs 60-70% baseline), tempo prep -50%, mentor escala de 10 para 20 mentorados mantendo qualidade"
+    },
+    "business_model": {
+      "pricing_model": "Annual subscription (pago anualmente com desconto ou mensal)",
+      "pricing_tiers": [
+        {
+          "tier": "Early Adopter",
+          "price": "$497/ano (~R$2485)",
+          "features": "Acesso completo MVP, suporte prioritário, input roadmap v2",
+          "limit": "First 10 mentors (validação MLS)",
+          "target": "MLS mentors piloto"
+        },
+        {
+          "tier": "Premium",
+          "price": "$1000/ano (~R$5000) ou $97/mês",
+          "features": "Acesso completo, IA ilimitada, export PDF ilimitado, suporte prioritário",
+          "limit": "Unlimited mentors",
+          "target": "General availability pós-PMF"
+        }
+      ],
+      "target_ltv": "$5000 (5 anos retenção média, considerando upgrades futuros)",
+      "target_cac": "$500 (MLS partnership reduz CAC - boca a boca + branding)",
+      "ltv_cac_ratio": "10:1",
+      "payback_period_months": 6
+    },
+    "seven_powers": {
+      "counter_positioning": "CRM + IA contextual mentoria = DNA diferente de CRMs genéricos (vendas-first). Competitors (HubSpot, Pipedrive) não podem adicionar 'modo mentoria' sem quebrar produto core. Incumbents ignoram nicho (muito pequeno para eles).",
+      "process_power": "Metodologia renovação automática baseada (1) entregas tracked, (2) IA identifica gaps evolução, (3) sugere plano próxima fase. Processo replicável = cada mentor consegue renovar >80% usando sistema.",
+      "scale_economies": "Mais mentores usando = mais dados sessões = IA melhora prompts contextuais = produto fica melhor para todos. Fixed cost IA diluído base usuários.",
+      "network_effects": "MLS partnership = rede fechada mentores premium. Quanto mais MLS mentors usam, mais vira 'padrão da indústria' = novos mentors precisam usar para competir.",
+      "switching_costs": "Histórico completo mentorados (2-5 anos sessões) = impossível migrar para outro sistema sem perder memória. Quanto mais tempo usa, mais locked-in.",
+      "brand": "MLS partnership = selo qualidade premium. 'Powered by MLS' no produto = credibilidade instantânea mercado executivo.",
+      "cornered_resource": "Acesso exclusivo rede MLS (mentors premium) como beachhead market = competitors não conseguem entrar por falta credibilidade inicial."
+    }
+  },
+  "product_requirements": {
+    "mvp_scope": {
+      "must_have": [
+        "Login/Auth (email, Google, LinkedIn)",
+        "Board visual mentorados (cards com foto, nome, status, % progresso, dias restantes)",
+        "CRUD mentorados (criar, editar, arquivar)",
+        "Ficha mentorado detalhada (5 tabs: Resumo, Sessões, Entregáveis, Progresso, Renovação)",
+        "Input sessões rápido (data, tema, notas, próximos passos)",
+        "IA contextual (resumo últimas 3 sessões + 3 perguntas provocativas)",
+        "Entregáveis tracking (lista tarefas + responsável + prazo + status + % geral)",
+        "Contador dias restantes plano atual",
+        "Sistema alerta renovação (últimos 30 dias do ciclo)",
+        "IA sugere plano renovação baseado gaps",
+        "Perfil mentor (nome, bio, especialidade, config IA)",
+        "Configurações segurança (senha, 2FA, excluir mentorado)"
+      ],
+      "should_have": [
+        "Dashboard ROI/clareza (gráficos evolução mentorado)",
+        "Export PDF relatório progresso (para mostrar mentorado)",
+        "Tags/filtros board (ativo, renovação, concluído, MLS)",
+        "Busca mentorados",
+        "Tema dark/light",
+        "IA tone customization (provocador, empático, direto)",
+        "Templates perguntas favoritas mentor",
+        "Notificações email (sessão amanhã, renovação próxima)"
+      ],
+      "could_have": [
+        "Integração Calendly/Google Calendar (import sessões automático)",
+        "App Mobile (React Native)",
+        "Métricas emocionais (análise sentimento notas)",
+        "Chat mentor-IA contextualizado (perguntar IA sobre mentorado)",
+        "Compartilhar progresso com mentorado (link público)",
+        "Multi-idioma (EN, PT, ES)"
+      ],
+      "wont_have_v1": [
+        "Multi-mentor (1 mentorado com vários mentores colaborando)",
+        "Marketplace mentores (conectar mentors-mentees)",
+        "Payment processing integrado (Stripe checkout mentorias)",
+        "Video conferencing nativo (usar Zoom/Meet externo)",
+        "Time tracking automático",
+        "Invoicing/faturamento",
+        "Mentorado self-service (portal mentorado input próprio progresso)"
+      ]
+    },
+    "ui_pages": [
+      {
+        "page_name": "Login / Onboard",
+        "route": "/login",
+        "description": "Autenticação segura e contextualizada (mentor → dashboard)",
+        "user_type": "Mentor",
+        "components": [
+          {
+            "component_name": "LoginForm",
+            "type": "form",
+            "functionality": "Email/senha, OAuth Google/LinkedIn, campo código MLS (parceiros)",
+            "states": ["idle", "loading", "error", "success"]
+          },
+          {
+            "component_name": "BrandingHeader",
+            "type": "header",
+            "functionality": "Logo MRM + frase 'Clareza é poder. Relacionamento é resultado.'",
+            "states": ["default"]
+          },
+          {
+            "component_name": "MLSBadge",
+            "type": "badge",
+            "functionality": "Se código MLS válido, mostra 'Powered by MLS'",
+            "states": ["hidden", "visible"]
+          }
+        ],
+        "data_required": ["users table (auth)"],
+        "actions": ["login", "signup", "oauth_google", "oauth_linkedin"]
+      },
+      {
+        "page_name": "Home / Board de Mentorados",
+        "route": "/dashboard",
+        "description": "Central de controle - visão rápida todos mentorados e status geral",
+        "user_type": "Mentor",
+        "components": [
+          {
+            "component_name": "WelcomeHeader",
+            "type": "header",
+            "functionality": "Nome mentor + IA contextual 'Bom dia, você tem 3 mentorias hoje'",
+            "states": ["loading", "loaded"]
+          },
+          {
+            "component_name": "MenteeCard",
+            "type": "card",
+            "functionality": "Nome + foto/inicial + barra progresso (% entregas) + dias restantes + status badge (ativo/renovação/concluído) + botão 'abrir ficha'",
+            "states": ["idle", "hover", "loading"]
+          },
+          {
+            "component_name": "AddMenteeButton",
+            "type": "button",
+            "functionality": "Modal criar novo mentorado (nome, empresa, objetivo, duração plano)",
+            "states": ["idle", "modal_open"]
+          },
+          {
+            "component_name": "FilterBar",
+            "type": "filter",
+            "functionality": "Busca + tags (ativo, inativo, MLS, renovação próxima)",
+            "states": ["idle", "filtered"]
+          }
+        ],
+        "data_required": ["mentees table", "deliverables table (calcular %)", "sessions table (último contato)"],
+        "actions": ["view_mentee", "create_mentee", "filter", "search"]
+      },
+      {
+        "page_name": "Ficha do Mentorado (Detalhe)",
+        "route": "/mentee/:id",
+        "description": "Tudo que importa sobre 1 mentorado - 5 tabs (Resumo, Sessões, Entregáveis, Progresso, Renovação)",
+        "user_type": "Mentor",
+        "components": [
+          {
+            "component_name": "MenteeHeader",
+            "type": "header",
+            "functionality": "Foto, nome, empresa, cargo, % plano, dias restantes",
+            "states": ["loading", "loaded"]
+          },
+          {
+            "component_name": "TabNavigation",
+            "type": "tabs",
+            "functionality": "5 tabs: Resumo / Sessões / Entregáveis / Progresso / Renovação",
+            "states": ["tab_resumo", "tab_sessoes", "tab_entregaveis", "tab_progresso", "tab_renovacao"]
+          },
+          {
+            "component_name": "ResumoTab",
+            "type": "panel",
+            "functionality": "Objetivo declarado + Dor dita vs Dor observada (IA) + % concluído + dias restantes",
+            "states": ["loaded"]
+          },
+          {
+            "component_name": "SessoesTab",
+            "type": "timeline",
+            "functionality": "Linha tempo cards sessão (data, tema, notas, insight IA, próximos passos) + botão '+ Nova sessão'",
+            "states": ["empty", "loaded", "modal_nova_sessao"]
+          },
+          {
+            "component_name": "EntregaveisTab",
+            "type": "table",
+            "functionality": "Lista tarefas (tarefa, responsável, prazo, status, comentário) + barra progresso geral + IA sugere entregável baseado sessões",
+            "states": ["empty", "loaded", "adding"]
+          },
+          {
+            "component_name": "ProgressoTab",
+            "type": "charts",
+            "functionality": "Gráficos evolução (clareza inicial vs atual, entregáveis concluídos, sentimento sessões) + resumo IA + botão export PDF",
+            "states": ["loading", "loaded"]
+          },
+          {
+            "component_name": "RenovacaoTab",
+            "type": "panel",
+            "functionality": "Alerta dias restantes + plano atual vs plano sugerido IA (próximos 3 meses) + botão 'Gerar proposta'",
+            "states": ["not_due", "alert_30_days", "alert_7_days"]
+          }
+        ],
+        "data_required": ["mentees", "sessions", "deliverables", "progress_tracking", "ai_insights"],
+        "actions": ["switch_tab", "add_session", "edit_session", "add_deliverable", "update_deliverable", "export_report", "generate_renewal_plan"]
+      },
+      {
+        "page_name": "Perfil do Mentor",
+        "route": "/profile",
+        "description": "Configurar preferências pessoais e IA",
+        "user_type": "Mentor",
+        "components": [
+          {
+            "component_name": "ProfileForm",
+            "type": "form",
+            "functionality": "Nome, bio, especialidade, idiomas, foto",
+            "states": ["idle", "editing", "saving"]
+          },
+          {
+            "component_name": "AIConfigPanel",
+            "type": "form",
+            "functionality": "Tom IA (provocador, empático, direto), templates perguntas favoritas",
+            "states": ["idle", "editing"]
+          },
+          {
+            "component_name": "MLSBadge",
+            "type": "badge",
+            "functionality": "Se mentor MLS, mostra logo + código",
+            "states": ["hidden", "visible"]
+          }
+        ],
+        "data_required": ["users table"],
+        "actions": ["update_profile", "update_ai_config"]
+      },
+      {
+        "page_name": "Configurações / Segurança",
+        "route": "/settings",
+        "description": "Confiabilidade e controle de dados",
+        "user_type": "Mentor",
+        "components": [
+          {
+            "component_name": "SecuritySettings",
+            "type": "form",
+            "functionality": "Email, senha, 2FA, sessões ativas",
+            "states": ["idle", "editing", "2fa_setup"]
+          },
+          {
+            "component_name": "DataManagement",
+            "type": "panel",
+            "functionality": "Botão 'Excluir mentorado' (com confirmação), 'Exportar base completa' (JSON)",
+            "states": ["idle", "confirm_delete", "exporting"]
+          },
+          {
+            "component_name": "ThemeToggle",
+            "type": "toggle",
+            "functionality": "Tema claro/escuro",
+            "states": ["light", "dark"]
+          }
+        ],
+        "data_required": ["users", "user_sessions"],
+        "actions": ["update_password", "enable_2fa", "delete_mentee", "export_data", "toggle_theme"]
+      }
+    ],
+    "features": [
+      {
+        "id": "F001",
+        "name": "Board Visual Mentorados",
+        "description": "Dashboard principal mostrando cards todos mentorados com status, progresso e dias restantes",
+        "user_story": "As a mentor Maria, I want to see all my mentees at a glance with their status and progress, so that I can quickly identify who needs attention today",
+        "acceptance_criteria": [
+          "Cards exibem nome, foto/inicial, % progresso, dias restantes, status badge",
+          "Clicking card abre ficha detalhada mentorado",
+          "Status badge cores: verde (ativo), laranja (renovação próxima <30 dias), cinza (concluído)",
+          "Ordenação: renovação próxima first, depois alfabético"
+        ],
+        "priority": "must_have",
+        "effort_estimate": "medium",
+        "dependencies": []
+      },
+      {
+        "id": "F002",
+        "name": "IA Contextual - Resumo Sessões",
+        "description": "IA lê últimas 3 sessões e gera resumo + 3 perguntas provocativas para próxima sessão",
+        "user_story": "As a mentor Maria, I want AI to summarize past sessions and suggest questions, so that I can prep for the next session in 5 minutes instead of 30",
+        "acceptance_criteria": [
+          "IA gera resumo últimas 3 sessões (máx 200 palavras)",
+          "IA sugere 3 perguntas provocativas baseadas em gaps identificados",
+          "Resumo atualiza automaticamente quando nova sessão adicionada",
+          "Mentor pode regenerar resumo se não gostar (botão 'Regenerar')"
+        ],
+        "priority": "must_have",
+        "effort_estimate": "large",
+        "dependencies": ["F003"]
+      },
+      {
+        "id": "F003",
+        "name": "Input Sessões Rápido",
+        "description": "Formulário rápido pós-sessão para documentar data, tema, notas, próximos passos",
+        "user_story": "As a mentor Maria, I want to quickly log session notes in 5 minutes, so that I don't lose context and can move to the next meeting",
+        "acceptance_criteria": [
+          "Form campos: Data (default hoje), Tema (texto curto), Notas (textarea), Próximos passos (textarea)",
+          "Tags opcionais: emoção (frustrado, esperançoso, confuso), resultado (breakthrough, incremental, stuck)",
+          "Auto-save draft a cada 30 segundos",
+          "Botão 'Salvar e gerar insight IA' (chama F002)"
+        ],
+        "priority": "must_have",
+        "effort_estimate": "small",
+        "dependencies": []
+      },
+      {
+        "id": "F004",
+        "name": "Entregáveis Tracking",
+        "description": "Sistema gerenciar entregáveis combinados com mentorado (tarefas + prazos + status)",
+        "user_story": "As a mentor Maria, I want to track deliverables agreed with mentee, so that I can show clear progress and accountability",
+        "acceptance_criteria": [
+          "Lista entregáveis: tarefa (texto), responsável (mentor/mentee), prazo (data), status (pending/in_progress/completed/cancelled)",
+          "Barra progresso geral (% entregáveis completed)",
+          "IA sugere entregável baseado notas sessão (botão 'IA sugerir')",
+          "Atualizar status entregável reflete imediatamente no % board principal"
+        ],
+        "priority": "must_have",
+        "effort_estimate": "medium",
+        "dependencies": []
+      },
+      {
+        "id": "F005",
+        "name": "Sistema Alerta Renovação",
+        "description": "Contador dias restantes + alerta automático últimos 30/15/7 dias plano atual",
+        "user_story": "As a mentor Maria, I want to be alerted when a mentee's plan is ending, so that I can proactively prepare renewal proposal",
+        "acceptance_criteria": [
+          "Contador dias restantes visível: board card + ficha mentorado",
+          "Alerta visual 30 dias antes: badge laranja 'Renovação próxima'",
+          "Alerta visual 7 dias antes: badge vermelho 'Renovação urgente'",
+          "Email notificação 30 dias antes (se mentor ativou notificações)"
+        ],
+        "priority": "must_have",
+        "effort_estimate": "small",
+        "dependencies": []
+      },
+      {
+        "id": "F006",
+        "name": "IA Plano Renovação",
+        "description": "IA analisa progresso atual e sugere plano próximos 3 meses (fase 2 mentoria)",
+        "user_story": "As a mentor Maria, I want AI to suggest a renewal plan based on gaps identified, so that I can present a compelling proposal to the mentee",
+        "acceptance_criteria": [
+          "IA identifica gaps: % entregáveis não concluídos, áreas não exploradas (baseado sessões)",
+          "IA sugere foco próximos 3 meses (ex: 'Fase 2: Liderança e Execução')",
+          "IA drafta texto proposta (3 parágrafos: progresso atual, gaps restantes, plano fase 2)",
+          "Mentor pode editar proposta antes enviar/copiar"
+        ],
+        "priority": "must_have",
+        "effort_estimate": "large",
+        "dependencies": ["F002", "F004"]
+      },
+      {
+        "id": "F007",
+        "name": "Export PDF Relatório",
+        "description": "Gerar PDF profissional com progresso mentorado (mostrar ROI)",
+        "user_story": "As a mentor Maria, I want to export a progress report as PDF, so that I can share tangible results with the mentee during renewal conversation",
+        "acceptance_criteria": [
+          "PDF contém: nome mentorado, período, % progresso geral, entregáveis concluídos, gráfico evolução clareza, resumo IA conquistas",
+          "Branding MRM + logo MLS (se aplicável)",
+          "Download PDF <5 segundos",
+          "Design profissional clean (não amador)"
+        ],
+        "priority": "should_have",
+        "effort_estimate": "medium",
+        "dependencies": ["F004"]
+      },
+      {
+        "id": "F008",
+        "name": "Dashboard Progresso/ROI",
+        "description": "Gráficos evolução mentorado (clareza, entregas, sentimento) para mostrar valor tangível",
+        "user_story": "As a mentor Maria, I want to see visual charts of mentee's progress, so that I can prove value delivered and justify renewal",
+        "acceptance_criteria": [
+          "Gráfico linha: Clareza inicial (baseline sessão 1) vs atual (escala 1-10)",
+          "Gráfico barras: Entregáveis concluídos ao longo tempo",
+          "Gráfico sentimento: Análise tags emoção sessões (frustrado → esperançoso)",
+          "Resumo IA: 'Nos últimos 30 dias, mentorado evoluiu em X e Y'"
+        ],
+        "priority": "should_have",
+        "effort_estimate": "large",
+        "dependencies": ["F003", "F004"]
+      }
+    ],
+    "user_flows": [
+      {
+        "flow_name": "Onboarding Mentor (First-Time Login)",
+        "trigger": "Mentor cria conta e faz primeiro login",
+        "steps": [
+          "Login com Google/email",
+          "Welcome screen: 'Bem-vindo ao MRM' + vídeo 2 min tour produto",
+          "Criar primeiro mentorado: nome, empresa, objetivo declarado, duração plano (ex: 6 meses)",
+          "Input primeira sessão (data, tema, notas iniciais)",
+          "IA gera baseline clareza (mentor avalia mentorado 1-10)",
+          "Redireciona para Board (mostra primeiro card mentorado)"
+        ],
+        "success_criteria": "Mentor completa setup primeiro mentorado em <5 min e vê board funcional",
+        "edge_cases": [
+          "Mentor pula onboarding → pode criar mentorado depois via botão '+ Novo'",
+          "Mentor fecha browser mid-onboarding → progresso salvo, continua onde parou"
+        ]
+      },
+      {
+        "flow_name": "Prep Sessão Mentorado",
+        "trigger": "Mentor vai ter sessão com mentorado hoje/amanhã",
+        "steps": [
+          "Abre Board, clica card mentorado",
+          "Tab 'Resumo' mostra: objetivo declarado, % progresso, dias restantes",
+          "Rola para baixo: IA mostra resumo últimas 3 sessões + 3 perguntas provocativas",
+          "Tab 'Entregáveis': vê o que estava pendente (ex: 'Montar pitch deck' - status 'in_progress')",
+          "Mentor mentalmente prepara: focar perguntas IA + cobrar entregáveis pendentes",
+          "(Opcional) Clica 'Regenerar perguntas IA' se não gostar sugestões",
+          "Fecha ficha, vai para sessão com mentorado"
+        ],
+        "success_criteria": "Mentor prep completa em 5-10 min (vs 30 min antes), sente-se contextualizado",
+        "edge_cases": [
+          "IA não gera perguntas (erro API) → mostra últimas perguntas usadas sessão anterior",
+          "Mentorado não tem sessões anteriores → IA sugere perguntas genéricas onboarding"
+        ]
+      },
+      {
+        "flow_name": "Input Pós-Sessão",
+        "trigger": "Mentor termina sessão com mentorado",
+        "steps": [
+          "Abre ficha mentorado, Tab 'Sessões'",
+          "Clica '+ Nova Sessão'",
+          "Preenche form rápido: data (default hoje), tema (ex: 'Clareza estratégica'), notas (textarea bullets principais pontos), próximos passos (o que mentorado vai fazer até próxima sessão)",
+          "(Opcional) Adiciona tags: emoção 'esperançoso', resultado 'breakthrough'",
+          "Clica 'Salvar e gerar insight IA'",
+          "IA processa notas e atualiza: (1) resumo sessões, (2) sugere entregável se identificar tarefa nas notas, (3) atualiza gráfico progresso",
+          "Mentor revisa sugestão entregável IA, adiciona à lista se relevante",
+          "Fecha ficha, continua trabalho"
+        ],
+        "success_criteria": "Input completo em 5 min, IA automaticamente atualiza contexto mentorado",
+        "edge_cases": [
+          "Mentor esquece input → notificação 1 dia depois 'Você teve sessão com X ontem, documente enquanto lembra'",
+          "IA sugere entregável irrelevante → mentor ignora, não adiciona lista"
+        ]
+      },
+      {
+        "flow_name": "Renovação Mentoria",
+        "trigger": "Contador dias restantes atinge 30 dias (alerta renovação)",
+        "steps": [
+          "Board mostra badge laranja 'Renovação próxima' no card mentorado",
+          "Mentor clica card, vai Tab 'Renovação'",
+          "Sistema mostra: (1) progresso atual (85% entregáveis concluídos), (2) gaps identificados (liderança de equipe não explorado), (3) plano sugerido IA fase 2 (próximos 3 meses foco liderança + execução)",
+          "Mentor revisa proposta IA, edita se necessário",
+          "Clica 'Exportar PDF' → gera relatório progresso + proposta fase 2",
+          "Mentor agenda call renovação com mentorado, apresenta PDF",
+          "Mentorado decide renovar → mentor atualiza sistema: estende prazo plano +3 meses, status volta 'ativo'",
+          "(Se não renova) Mentor marca mentorado como 'concluído', arquiva (mas mantém histórico)"
+        ],
+        "success_criteria": "Mentor apresenta proposta renovação baseada dados concretos, mentorado vê valor, renova >80% casos",
+        "edge_cases": [
+          "Mentorado renova mas quer mudar foco → mentor edita objetivo declarado, IA ajusta próximas sugestões",
+          "Mentorado não renova → mentor documenta motivo (campo 'razão não renovação') para learnings futuros"
+        ]
+      }
+    ],
+    "data_model": {
+      "entities": [
+        {
+          "name": "users",
+          "description": "Mentores usando sistema",
+          "attributes": [
+            "id UUID PRIMARY KEY",
+            "email TEXT UNIQUE NOT NULL",
+            "full_name TEXT",
+            "bio TEXT",
+            "specialties TEXT[]",
+            "languages TEXT[]",
+            "mls_member BOOLEAN DEFAULT false",
+            "mls_code TEXT",
+            "ai_tone TEXT CHECK (ai_tone IN ('provocative', 'empathetic', 'direct')) DEFAULT 'empathetic'",
+            "theme TEXT CHECK (theme IN ('light', 'dark')) DEFAULT 'dark'",
+            "created_at TIMESTAMPTZ DEFAULT now()"
+          ],
+          "relationships": [
+            "1:N with mentees (one mentor has many mentees)",
+            "1:N with sessions (via mentees)"
+          ]
+        },
+        {
+          "name": "mentees",
+          "description": "Mentorados gerenciados por mentor",
+          "attributes": [
+            "id UUID PRIMARY KEY",
+            "mentor_id UUID REFERENCES users(id) ON DELETE CASCADE",
+            "full_name TEXT NOT NULL",
+            "photo_url TEXT",
+            "company TEXT",
+            "role TEXT",
+            "stated_goal TEXT",
+            "observed_pain TEXT (IA analisa sessões e preenche)",
+            "plan_duration_months INTEGER DEFAULT 6",
+            "plan_start_date DATE NOT NULL",
+            "plan_end_date DATE NOT NULL",
+            "status TEXT CHECK (status IN ('active', 'renewal_due', 'completed', 'cancelled')) DEFAULT 'active'",
+            "baseline_clarity_score INTEGER CHECK (baseline_clarity_score BETWEEN 1 AND 10)",
+            "created_at TIMESTAMPTZ DEFAULT now()",
+            "updated_at TIMESTAMPTZ DEFAULT now()"
+          ],
+          "relationships": [
+            "N:1 with users (many mentees belong to one mentor)",
+            "1:N with sessions",
+            "1:N with deliverables",
+            "1:N with progress_tracking"
+          ]
+        },
+        {
+          "name": "sessions",
+          "description": "Sessões mentor-mentorado documentadas",
+          "attributes": [
+            "id UUID PRIMARY KEY",
+            "mentee_id UUID REFERENCES mentees(id) ON DELETE CASCADE",
+            "session_date DATE NOT NULL",
+            "theme TEXT",
+            "notes TEXT",
+            "next_steps TEXT",
+            "emotion_tag TEXT CHECK (emotion_tag IN ('frustrated', 'hopeful', 'confused', 'excited', 'stuck'))",
+            "result_tag TEXT CHECK (result_tag IN ('breakthrough', 'incremental', 'stuck'))",
+            "ai_summary TEXT (gerado após save)",
+            "created_at TIMESTAMPTZ DEFAULT now()"
+          ],
+          "relationships": [
+            "N:1 with mentees"
+          ]
+        },
+        {
+          "name": "deliverables",
+          "description": "Entregáveis combinados mentor-mentorado",
+          "attributes": [
+            "id UUID PRIMARY KEY",
+            "mentee_id UUID REFERENCES mentees(id) ON DELETE CASCADE",
+            "task TEXT NOT NULL",
+            "responsible TEXT CHECK (responsible IN ('mentor', 'mentee')) DEFAULT 'mentee'",
+            "due_date DATE",
+            "status TEXT CHECK (status IN ('pending', 'in_progress', 'completed', 'cancelled')) DEFAULT 'pending'",
+            "comment TEXT",
+            "created_at TIMESTAMPTZ DEFAULT now()",
+            "completed_at TIMESTAMPTZ"
+          ],
+          "relationships": [
+            "N:1 with mentees"
+          ]
+        },
+        {
+          "name": "progress_tracking",
+          "description": "Tracking evolução mentorado ao longo tempo (métricas)",
+          "attributes": [
+            "id UUID PRIMARY KEY",
+            "mentee_id UUID REFERENCES mentees(id) ON DELETE CASCADE",
+            "measurement_date DATE NOT NULL",
+            "clarity_score INTEGER CHECK (clarity_score BETWEEN 1 AND 10)",
+            "deliverables_completed_count INTEGER DEFAULT 0",
+            "sentiment_avg TEXT CHECK (sentiment_avg IN ('negative', 'neutral', 'positive'))",
+            "created_at TIMESTAMPTZ DEFAULT now()"
+          ],
+          "relationships": [
+            "N:1 with mentees"
+          ]
+        },
+        {
+          "name": "ai_insights",
+          "description": "Insights gerados IA (resumos, perguntas, planos renovação) - cache",
+          "attributes": [
+            "id UUID PRIMARY KEY",
+            "mentee_id UUID REFERENCES mentees(id) ON DELETE CASCADE",
+            "insight_type TEXT CHECK (insight_type IN ('session_summary', 'provocative_questions', 'renewal_plan', 'observed_pain'))",
+            "content JSONB NOT NULL",
+            "generated_at TIMESTAMPTZ DEFAULT now()"
+          ],
+          "relationships": [
+            "N:1 with mentees"
+          ]
+        }
+      ]
+    }
+  },
+  "technical_requirements": {
+    "tech_stack": {
+      "frontend": "Next.js 14 (App Router) + TypeScript",
+      "backend": "Next.js API Routes + Supabase Edge Functions (se necessário)",
+      "database": "Supabase (PostgreSQL 15+)",
+      "hosting": "Vercel (frontend) + Supabase hosted (backend)",
+      "ai_models": ["OpenAI GPT-4o (resumos + perguntas)", "Claude 3.5 Sonnet (planos renovação)"],
+      "third_party_apis": ["Supabase Auth", "OpenAI API", "Anthropic API", "Resend (emails)"],
+      "dependencies": [
+        "next@14.0.0",
+        "@supabase/supabase-js@^2.39.0",
+        "@supabase/auth-helpers-nextjs",
+        "tailwindcss@^3.4.0",
+        "@shadcn/ui (components)",
+        "lucide-react (icons)",
+        "openai@^4.28.0",
+        "@anthropic-ai/sdk",
+        "recharts (gráficos)",
+        "jspdf (export PDF)",
+        "zod (validação forms)",
+        "react-hook-form"
+      ]
+    },
+    "architecture": {
+      "deployment_model": "Serverless (Vercel Edge Functions + Supabase)",
+      "scalability_requirements": "Suportar 100 mentors simultâneos (1000 mentees total) no MVP. Horizontal scaling via Supabase connection pooling.",
+      "security_requirements": [
+        "Auth: Supabase Auth (email/password + OAuth Google/LinkedIn)",
+        "2FA: TOTP via Supabase Auth MFA",
+        "RLS: Row Level Security Supabase (mentor só vê próprios mentorados)",
+        "Encryption: TLS 1.3 in transit, AES-256 at rest (Supabase default)",
+        "API keys: Environment variables (OPENAI_API_KEY, ANTHROPIC_API_KEY) nunca expor client"
+      ],
+      "compliance_requirements": [
+        "LGPD: Botão 'Excluir mentorado' (hard delete), 'Exportar dados' (JSON completo)",
+        "GDPR-ready: Mesmo fluxo LGPD serve GDPR",
+        "Privacy Policy: Texto claro rodapé login + settings",
+        "Termo de uso IA: Avisar que IA processa notas (consentimento implícito ao usar)"
+      ]
+    },
+    "integrations": [
+      {
+        "system": "Supabase Auth",
+        "type": "OAuth + Email/Password",
+        "data_flow": "Client → Supabase Auth → users table",
+        "frequency": "Real-time (login, signup)"
+      },
+      {
+        "system": "OpenAI GPT-4o",
+        "type": "API REST",
+        "data_flow": "Backend → OpenAI API (session notes) → AI insights table",
+        "frequency": "On-demand (após salvar sessão, regenerar insights)"
+      },
+      {
+        "system": "Anthropic Claude 3.5",
+        "type": "API REST",
+        "data_flow": "Backend → Anthropic API (renewal context) → AI insights table",
+        "frequency": "On-demand (tab renovação, gerar plano)"
+      },
+      {
+        "system": "Resend (emails)",
+        "type": "API REST",
+        "data_flow": "Backend → Resend API → mentor email (notificações)",
+        "frequency": "Batch daily (alertas renovação, sessões pendentes)"
+      }
+    ],
+    "performance_requirements": {
+      "response_time_ms": 200,
+      "uptime_target": "99.5% (aceitável MVP, 99.9% após GA)",
+      "concurrent_users": 50,
+      "data_volume": "Estimate: 100 mentors × 10 mentees × 24 sessions/ano × 5 anos = 120k sessions. PostgreSQL handle fácil."
+    }
+  },
+  "go_to_market": {
+    "launch_strategy": "Beachhead MLS (Mentoring League Society) - rede fechada mentores premium. Validar com 10 mentors MLS (early adopters $497/ano), iterar baseado feedback 30 dias, depois abrir GA $1000/ano.",
+    "target_launch_date": "2025-10-29 (MVP funcional quarta manhã)",
+    "pilot_customers": [
+      "3-5 mentors MLS (recrutar via rede Founder)",
+      "Target: mentors com 5-15 mentorados ativos, foco executivo/empresarial",
+      "Critério seleção: willingness feedback semanal + pagar early adopter price"
+    ],
+    "marketing_positioning": "Clareza é poder. MRM é o CRM premium para mentores que transformam vidas e provam resultados. Powered by MLS.",
+    "sales_enablement_needs": [
+      "Landing page dark clean: Hero 'Clareza é poder' + 3 benefits + demo vídeo 2 min + CTA 'Early Adopter $497'",
+      "Demo vídeo 2 min: Mostrar board → ficha mentorado → IA insights → renovação (screencast + voiceover)",
+      "Case study placeholder: 'Mentor Maria renovou 9/10 mentorados usando MRM' (fake até ter real)",
+      "Email template outreach MLS: Personalizado, mencionar partnership MLS, oferecer early adopter",
+      "Onboarding checklist mentor: PDF step-by-step setup primeiro mentorado"
+    ],
+    "operational_readiness": {
+      "coo_validated": false,
+      "capacity_assessment": "COO precisa validar: suporte resposta <24h, onboarding call 30 min por mentor (10 mentors = 5h total). Viável?",
+      "delivery_process": "Self-service signup → automated onboarding email → opcional: call 30 min walkthrough com mentor (se pedir). Suporte via email (Founder responde MVP).",
+      "support_model": "Email support inicial (Founder/CPO responde). FAQ inline produto. Futuro: chat widget."
+    }
+  },
+  "success_metrics": {
+    "pmf_indicators": {
+      "target_pmf_score": 8,
+      "retention_target": ">80% renewal rate após 6 meses (mentors continuam usando)",
+      "nps_target": 70,
+      "feature_adoption_target": ">90% mentors usam IA insights (core value)"
+    },
+    "business_kpis": [
+      {
+        "metric": "MRR (Monthly Recurring Revenue)",
+        "target": "$500 MRR (10 mentors × $50/mês early adopter) end of month 1",
+        "measurement_frequency": "Weekly"
+      },
+      {
+        "metric": "Mentor Churn Rate",
+        "target": "<10% monthly (alta retenção = PMF)",
+        "measurement_frequency": "Monthly"
+      },
+      {
+        "metric": "Mentee Renewal Rate (via mentor reports)",
+        "target": ">80% mentorados renovam (prova produto ajuda mentor renovar)",
+        "measurement_frequency": "Quarterly"
+      },
+      {
+        "metric": "Time to Value",
+        "target": "<7 dias (mentor sente valor primeira semana uso)",
+        "measurement_frequency": "Cohort analysis"
+      }
+    ],
+    "leading_indicators": [
+      "Sessions logged per mentor per week (target: >3 = engajamento alto)",
+      "AI insights regenerated count (target: >2/week = mentor confia IA)",
+      "Deliverables created per mentee (target: >5 = tracking ativo)"
+    ],
+    "lagging_indicators": [
+      "Mentor NPS score",
+      "Revenue growth MoM",
+      "Mentee renewal rate reported by mentors"
+    ]
+  },
+  "timeline": {
+    "milestones": [
+      {
+        "phase": "MVP Development",
+        "deliverables": [
+          "Frontend Next.js: Login, Board, Ficha Mentorado (5 tabs), Perfil, Settings",
+          "Backend Supabase: Schema 6 tables, RLS policies, API routes",
+          "IA Integration: OpenAI resumos + perguntas, Claude planos renovação",
+          "Deploy Vercel production"
+        ],
+        "deadline": "2025-10-29",
+        "owner": "PM MRM (TBD) + CTO Ronald",
+        "dependencies": ["Supabase project setup", "OpenAI/Anthropic API keys", "Vercel account"]
+      },
+      {
+        "phase": "Pilot Launch MLS",
+        "deliverables": [
+          "Recrutar 3-5 mentors MLS early adopters",
+          "Onboarding calls 30 min cada",
+          "Feedback loop semanal (form + call)",
+          "Iterar bugs críticos <48h"
+        ],
+        "deadline": "2025-11-15",
+        "owner": "Founder Aleff + CSO André",
+        "dependencies": ["MVP deployed"]
+      },
+      {
+        "phase": "Iteration v1.1",
+        "deliverables": [
+          "Fixes bugs pilot feedback",
+          "Features should_have prioritized (dashboard gráficos, export PDF)",
+          "Polish UI/UX baseado usability tests"
+        ],
+        "deadline": "2025-11-30",
+        "owner": "PM MRM",
+        "dependencies": ["Pilot feedback collected"]
+      },
+      {
+        "phase": "PMF Validation",
+        "deliverables": [
+          "PMF Score >8/10 (survey mentors)",
+          "Retention >80% month 2",
+          "NPS >70",
+          "Decision: GO (scale marketing) ou NO-GO (mais iteration)"
+        ],
+        "deadline": "2025-12-15",
+        "owner": "CEO Manoel + CPO Maicon",
+        "dependencies": ["v1.1 deployed, 30 dias usage data"]
+      }
+    ],
+    "mvp_deadline": "2025-10-29",
+    "pilot_deadline": "2025-11-15",
+    "ga_deadline": "2026-01-01 (se PMF validado)"
+  },
+  "risks_dependencies": {
+    "risks": [
+      {
+        "risk": "IA gera insights irrelevantes/genéricos (mentors ignoram feature core)",
+        "probability": "medium",
+        "impact": "high",
+        "mitigation": "Testar prompts exaustivamente com sessões reais piloto. Botão 'Regenerar' dá segunda chance. Feedback loop: mentor marca insight como útil/inútil → fine-tune prompts."
+      },
+      {
+        "risk": "Mentors MLS não pagam mesmo $497 (price sensitivity)",
+        "probability": "low",
+        "impact": "high",
+        "mitigation": "Validar willingness-to-pay antes build (survey MLS network). Oferecer trial 30 dias grátis se resistência. Garantia devolução se não sentir valor primeiro mês."
+      },
+      {
+        "risk": "Deadline 29/10 muito apertado (7 dias build MVP completo)",
+        "probability": "high",
+        "impact": "medium",
+        "mitigation": "Priorizar ruthlessly must_have. Usar Lovable/v0 acelerar frontend. CTO Ronald full-time projeto. Se atrasar 2-3 dias, ok (pilot não commitado ainda)."
+      },
+      {
+        "risk": "Competitors copiam rápido (baixa barreira entrada técnica)",
+        "probability": "medium",
+        "impact": "medium",
+        "mitigation": "MLS partnership exclusivity = moat inicial. Velocidade: lançar primeiro, iterar rápido baseado feedback real = construir switching costs antes competitors acordarem."
+      }
+    ],
+    "dependencies": [
+      {
+        "dependency": "Supabase project criado + schema deployed",
+        "owner": "CTO Ronald",
+        "status": "pending",
+        "blocker": true
+      },
+      {
+        "dependency": "OpenAI API key (org billing configurado)",
+        "owner": "CFO Tales (aprovar budget) + CTO Ronald (setup)",
+        "status": "pending",
+        "blocker": true
+      },
+      {
+        "dependency": "Anthropic API key",
+        "owner": "CTO Ronald",
+        "status": "pending",
+        "blocker": true
+      },
+      {
+        "dependency": "MLS partnership formal (usar logo 'Powered by MLS')",
+        "owner": "Founder Aleff",
+        "status": "pending",
+        "blocker": false
+      },
+      {
+        "dependency": "Vercel account production (não hobby plan)",
+        "owner": "CTO Ronald",
+        "status": "pending",
+        "blocker": false
+      }
+    ],
+    "assumptions": [
+      "Mentores MLS têm 5-15 mentorados ativos (validar early calls)",
+      "Sessões documentadas em <10 min é aceitável (não vão querer 30 min input)",
+      "IA insights 70%+ úteis (30% ruído aceitável se maioria agrega valor)",
+      "Mentores usam desktop primariamente (mobile nice-to-have, não must v1)",
+      "Dados sensíveis mentorados ok armazenar cloud (Supabase US/EU servers) - validar LGPD/GDPR"
+    ]
+  },
+  "team_resources": {
+    "pm_responsible": "TBD (CPO Maicon supervisiona até alocar PM dedicado)",
+    "c_level_approvals": {
+      "cpo": true,
+      "ceo": false,
+      "coo": false,
+      "cto": false,
+      "cfo": false,
+      "cmo": false,
+      "cso": false
+    },
+    "external_resources": [
+      "Lovable/v0/Bolt.new (acelerar frontend geração)",
+      "Designer UI/UX (se orçamento permitir - ou usar shadcn/ui templates)"
+    ]
+  },
+  "metadata": {
+    "created_date": "2025-10-22",
+    "last_updated": "2025-10-22",
+    "version_history": [
+      {"version": "0.1", "date": "2025-10-22", "changes": "Criação inicial PRD baseado conversa GPT Founder"}
+    ],
+    "document_owner": "CPO Maicon",
+    "status": "draft"
+  }
+}
