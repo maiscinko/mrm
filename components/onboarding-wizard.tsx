@@ -1,667 +1,838 @@
 "use client"
 
 import { useState } from "react"
+import { motion, AnimatePresence } from "framer-motion"
+import { ChevronLeft, ChevronRight, Check, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
-import { ChevronLeft, ChevronRight, Check } from "lucide-react"
+import { toast } from "sonner"
+import { cn } from "@/lib/utils"
 import { useRouter } from "next/navigation"
-import { OnboardingProgress } from "@/components/onboarding-progress"
 
-type OnboardingData = {
-  profile: {
-    fullName: string
-    bio: string
-    yearsExperience: number
-    specialties: string[]
-    mentoringStyle: string
-    isMlsMember: boolean
-    mlsCode: string
-  }
-  program: {
-    programName: string
-    billingModel: string
-    billingAmount: number
-    cycleDurationMonths: number
-  }
-  sessions: {
-    individualFrequency: string
-    individualDuration: number
-    individualFormat: string
-    groupFrequency: string
-    groupDuration: number
-    groupFormat: string
-  }
-  deliverables: {
-    methodology: string
-    deliverables: Array<{
-      name: string
-      type: string
-      description: string
-      dueAfterDays: number
-      isMandatory: boolean
-    }>
-    checkpoints: Array<{
-      name: string
-      frequencyDays: number
-      description: string
-    }>
-  }
+const steps = [
+  { id: "identification", title: "Identificação" },
+  { id: "club", title: "Seu Club MLS" },
+  { id: "deliverables", title: "Entregáveis" },
+  { id: "methodology", title: "Metodologia" },
+]
+
+interface FormData {
+  // Step 1: Identificação
+  fullName: string
+  email: string
+  linkedinUrl: string
+  instagramUrl: string
+  bio: string
+
+  // Step 2: Club & Categoria
+  clubName: string
+  clubCategory: string // bronze, silver, gold, platinum, diamond
+  activeMentees: number
+  nicheArea: string
+  mainSource: string
+  otherSource: string
+
+  // Step 3: Entregáveis
+  groupMeetingFrequency: string
+  groupMeetingDuration: number
+  groupMeetingFormat: string
+  individualFrequency: string
+  individualDuration: number
+  individualFormat: string
+  asyncCommunication: string[]
+  otherDeliverables: string[]
+
+  // Step 4: Metodologia
+  framework: string
+  customFramework: string
+  mentoringStyle: string
+  successMetrics: string[]
+}
+
+const fadeInUp = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.3 } },
+}
+
+const contentVariants = {
+  hidden: { opacity: 0, x: 50 },
+  visible: { opacity: 1, x: 0, transition: { duration: 0.3 } },
+  exit: { opacity: 0, x: -50, transition: { duration: 0.2 } },
 }
 
 export function OnboardingWizard() {
   const router = useRouter()
-  const [step, setStep] = useState(1)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [currentStep, setCurrentStep] = useState(0)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [formData, setFormData] = useState<FormData>({
+    // Step 1
+    fullName: "",
+    email: "",
+    linkedinUrl: "",
+    instagramUrl: "",
+    bio: "",
 
-  const [data, setData] = useState<OnboardingData>({
-    profile: {
-      fullName: "",
-      bio: "",
-      yearsExperience: 0,
-      specialties: [],
-      mentoringStyle: "",
-      isMlsMember: false,
-      mlsCode: "",
-    },
-    program: {
-      programName: "Programa Principal",
-      billingModel: "mensal",
-      billingAmount: 0,
-      cycleDurationMonths: 12,
-    },
-    sessions: {
-      individualFrequency: "quinzenal",
-      individualDuration: 60,
-      individualFormat: "online",
-      groupFrequency: "mensal",
-      groupDuration: 90,
-      groupFormat: "presencial",
-    },
-    deliverables: {
-      methodology: "GROW",
-      deliverables: [],
-      checkpoints: [],
-    },
+    // Step 2
+    clubName: "",
+    clubCategory: "",
+    activeMentees: 0,
+    nicheArea: "",
+    mainSource: "",
+    otherSource: "",
+
+    // Step 3
+    groupMeetingFrequency: "none",
+    groupMeetingDuration: 90,
+    groupMeetingFormat: "online",
+    individualFrequency: "monthly",
+    individualDuration: 60,
+    individualFormat: "online",
+    asyncCommunication: [],
+    otherDeliverables: [],
+
+    // Step 4
+    framework: "",
+    customFramework: "",
+    mentoringStyle: "",
+    successMetrics: [],
   })
 
-  const updateProfile = (field: string, value: any) => {
-    setData((prev) => ({
-      ...prev,
-      profile: { ...prev.profile, [field]: value },
-    }))
+  const updateFormData = (field: keyof FormData, value: any) => {
+    setFormData((prev) => ({ ...prev, [field]: value }))
   }
 
-  const updateProgram = (field: string, value: any) => {
-    setData((prev) => ({
-      ...prev,
-      program: { ...prev.program, [field]: value },
-    }))
+  const toggleArrayItem = (field: keyof FormData, item: string) => {
+    setFormData((prev) => {
+      const currentArray = prev[field] as string[]
+      if (currentArray.includes(item)) {
+        return { ...prev, [field]: currentArray.filter((i) => i !== item) }
+      } else {
+        return { ...prev, [field]: [...currentArray, item] }
+      }
+    })
   }
 
-  const updateSessions = (field: string, value: any) => {
-    setData((prev) => ({
-      ...prev,
-      sessions: { ...prev.sessions, [field]: value },
-    }))
+  const nextStep = () => {
+    if (currentStep < steps.length - 1) {
+      setCurrentStep((prev) => prev + 1)
+    }
   }
 
-  const updateDeliverables = (field: string, value: any) => {
-    setData((prev) => ({
-      ...prev,
-      deliverables: { ...prev.deliverables, [field]: value },
-    }))
-  }
-
-  const addDeliverable = () => {
-    setData((prev) => ({
-      ...prev,
-      deliverables: {
-        ...prev.deliverables,
-        deliverables: [
-          ...prev.deliverables.deliverables,
-          {
-            name: "",
-            type: "document",
-            description: "",
-            dueAfterDays: 30,
-            isMandatory: true,
-          },
-        ],
-      },
-    }))
-  }
-
-  const removeDeliverable = (index: number) => {
-    setData((prev) => ({
-      ...prev,
-      deliverables: {
-        ...prev.deliverables,
-        deliverables: prev.deliverables.deliverables.filter((_, i) => i !== index),
-      },
-    }))
-  }
-
-  const updateDeliverableField = (index: number, field: string, value: any) => {
-    setData((prev) => ({
-      ...prev,
-      deliverables: {
-        ...prev.deliverables,
-        deliverables: prev.deliverables.deliverables.map((d, i) =>
-          i === index ? { ...d, [field]: value } : d
-        ),
-      },
-    }))
-  }
-
-  const addCheckpoint = () => {
-    setData((prev) => ({
-      ...prev,
-      deliverables: {
-        ...prev.deliverables,
-        checkpoints: [
-          ...prev.deliverables.checkpoints,
-          {
-            name: "",
-            frequencyDays: 30,
-            description: "",
-          },
-        ],
-      },
-    }))
-  }
-
-  const removeCheckpoint = (index: number) => {
-    setData((prev) => ({
-      ...prev,
-      deliverables: {
-        ...prev.deliverables,
-        checkpoints: prev.deliverables.checkpoints.filter((_, i) => i !== index),
-      },
-    }))
-  }
-
-  const updateCheckpointField = (index: number, field: string, value: any) => {
-    setData((prev) => ({
-      ...prev,
-      deliverables: {
-        ...prev.deliverables,
-        checkpoints: prev.deliverables.checkpoints.map((c, i) =>
-          i === index ? { ...c, [field]: value } : c
-        ),
-      },
-    }))
+  const prevStep = () => {
+    if (currentStep > 0) {
+      setCurrentStep((prev) => prev - 1)
+    }
   }
 
   const handleSubmit = async () => {
-    setLoading(true)
-    setError(null)
+    setIsSubmitting(true)
 
     try {
       const response = await fetch("/api/onboarding", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify(formData),
       })
 
       const result = await response.json()
 
       if (!response.ok) {
-        throw new Error(result.error || "Falha ao salvar onboarding")
+        throw new Error(result.error || "Erro ao salvar onboarding")
       }
 
-      console.log("[Onboarding] Success:", result)
+      toast.success("Onboarding concluído com sucesso!")
       router.push("/dashboard")
       router.refresh()
     } catch (err) {
-      console.error("[Onboarding] Error:", err)
-      setError(err instanceof Error ? err.message : "Erro desconhecido")
-      setLoading(false)
+      console.error("[Onboarding Error]:", err)
+      toast.error(err instanceof Error ? err.message : "Erro desconhecido")
+      setIsSubmitting(false)
     }
   }
 
-  const progress = (step / 4) * 100
+  const isStepValid = () => {
+    switch (currentStep) {
+      case 0:
+        return formData.fullName.trim() !== "" && formData.email.trim() !== ""
+      case 1:
+        return formData.clubCategory !== "" && formData.nicheArea.trim() !== ""
+      case 2:
+        return formData.individualFrequency !== ""
+      case 3:
+        return formData.mentoringStyle !== ""
+      default:
+        return true
+    }
+  }
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <Card className="w-full max-w-3xl">
-        <CardHeader>
-          <CardTitle className="text-2xl">Configuração Inicial da Mentoria</CardTitle>
-          <CardDescription>
-            Complete as etapas abaixo para estruturar sua mentoria
-          </CardDescription>
-        </CardHeader>
-
-        <CardContent>
-          {error && (
-            <div className="mb-4 p-4 bg-destructive/10 border border-destructive rounded-md">
-              <p className="text-sm text-destructive">{error}</p>
-            </div>
-          )}
-
-          {/* STEP 1: Perfil do Mentor */}
-          {step === 1 && (
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Seu Perfil de Mentor</h3>
-
-              <div className="space-y-2">
-                <Label htmlFor="fullName">Nome Completo *</Label>
-                <Input
-                  id="fullName"
-                  value={data.profile.fullName}
-                  onChange={(e) => updateProfile("fullName", e.target.value)}
-                  placeholder="João Silva"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="bio">Bio / Sobre Você</Label>
-                <Textarea
-                  id="bio"
-                  value={data.profile.bio}
-                  onChange={(e) => updateProfile("bio", e.target.value)}
-                  placeholder="Conte um pouco sobre sua trajetória e experiência..."
-                  rows={4}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="yearsExperience">Anos de Experiência</Label>
-                <Input
-                  id="yearsExperience"
-                  type="number"
-                  value={data.profile.yearsExperience}
-                  onChange={(e) => updateProfile("yearsExperience", parseInt(e.target.value) || 0)}
-                  placeholder="10"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="mentoringStyle">Estilo de Mentoria</Label>
-                <Select
-                  value={data.profile.mentoringStyle}
-                  onValueChange={(value) => updateProfile("mentoringStyle", value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione seu estilo" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="diretivo">Diretivo (mais orientação)</SelectItem>
-                    <SelectItem value="coaching">Coaching (perguntas provocativas)</SelectItem>
-                    <SelectItem value="hibrido">Híbrido (equilibrado)</SelectItem>
-                    <SelectItem value="facilitador">Facilitador (mentorado lidera)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="isMlsMember"
-                  checked={data.profile.isMlsMember}
-                  onCheckedChange={(checked) => updateProfile("isMlsMember", checked)}
-                />
-                <Label htmlFor="isMlsMember" className="cursor-pointer">
-                  Sou membro MLS (Mentoring Lab School)
-                </Label>
-              </div>
-
-              {data.profile.isMlsMember && (
-                <div className="space-y-2">
-                  <Label htmlFor="mlsCode">Código MLS</Label>
-                  <Input
-                    id="mlsCode"
-                    value={data.profile.mlsCode}
-                    onChange={(e) => updateProfile("mlsCode", e.target.value)}
-                    placeholder="MLS-12345"
-                  />
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* STEP 2: Configuração do Programa */}
-          {step === 2 && (
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Configuração do Programa</h3>
-
-              <div className="space-y-2">
-                <Label htmlFor="programName">Nome do Programa *</Label>
-                <Input
-                  id="programName"
-                  value={data.program.programName}
-                  onChange={(e) => updateProgram("programName", e.target.value)}
-                  placeholder="Programa de Mentoria Executiva"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="billingModel">Modelo de Cobrança</Label>
-                <Select
-                  value={data.program.billingModel}
-                  onValueChange={(value) => updateProgram("billingModel", value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o modelo" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="mensal">Mensal</SelectItem>
-                    <SelectItem value="trimestral">Trimestral</SelectItem>
-                    <SelectItem value="semestral">Semestral</SelectItem>
-                    <SelectItem value="anual">Anual</SelectItem>
-                    <SelectItem value="pacote">Pacote Fechado</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="billingAmount">Valor (R$)</Label>
-                <Input
-                  id="billingAmount"
-                  type="number"
-                  value={data.program.billingAmount}
-                  onChange={(e) => updateProgram("billingAmount", parseFloat(e.target.value) || 0)}
-                  placeholder="5000"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="cycleDurationMonths">Duração do Ciclo (meses)</Label>
-                <Input
-                  id="cycleDurationMonths"
-                  type="number"
-                  value={data.program.cycleDurationMonths}
-                  onChange={(e) =>
-                    updateProgram("cycleDurationMonths", parseInt(e.target.value) || 12)
+    <div className="w-full max-w-3xl mx-auto py-8 px-4">
+      {/* Progress indicator */}
+      <motion.div
+        className="mb-8"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <div className="flex justify-between mb-2">
+          {steps.map((step, index) => (
+            <motion.div
+              key={index}
+              className="flex flex-col items-center flex-1"
+              whileHover={{ scale: 1.05 }}
+            >
+              <motion.div
+                className={cn(
+                  "w-10 h-10 rounded-full cursor-pointer transition-colors duration-300 flex items-center justify-center text-sm font-medium",
+                  index < currentStep
+                    ? "bg-primary text-primary-foreground"
+                    : index === currentStep
+                      ? "bg-primary ring-4 ring-primary/20 text-primary-foreground"
+                      : "bg-muted text-muted-foreground",
+                )}
+                onClick={() => {
+                  if (index <= currentStep) {
+                    setCurrentStep(index)
                   }
-                  placeholder="12"
-                />
-              </div>
-            </div>
-          )}
+                }}
+                whileTap={{ scale: 0.95 }}
+              >
+                {index < currentStep ? <Check className="h-5 w-5" /> : index + 1}
+              </motion.div>
+              <motion.span
+                className={cn(
+                  "text-xs mt-2 text-center hidden sm:block",
+                  index === currentStep
+                    ? "text-primary font-medium"
+                    : "text-muted-foreground",
+                )}
+              >
+                {step.title}
+              </motion.span>
+            </motion.div>
+          ))}
+        </div>
+        <div className="w-full bg-muted h-2 rounded-full overflow-hidden mt-4">
+          <motion.div
+            className="h-full bg-primary"
+            initial={{ width: 0 }}
+            animate={{ width: `${((currentStep + 1) / steps.length) * 100}%` }}
+            transition={{ duration: 0.3 }}
+          />
+        </div>
+      </motion.div>
 
-          {/* STEP 3: Estrutura de Sessões */}
-          {step === 3 && (
-            <div className="space-y-6">
-              <h3 className="text-lg font-semibold">Estrutura de Sessões</h3>
-
-              <div className="border rounded-lg p-4 space-y-4">
-                <h4 className="font-medium">Sessões Individuais</h4>
-
-                <div className="space-y-2">
-                  <Label htmlFor="individualFrequency">Frequência</Label>
-                  <Select
-                    value={data.sessions.individualFrequency}
-                    onValueChange={(value) => updateSessions("individualFrequency", value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="semanal">Semanal</SelectItem>
-                      <SelectItem value="quinzenal">Quinzenal</SelectItem>
-                      <SelectItem value="mensal">Mensal</SelectItem>
-                      <SelectItem value="flexivel">Flexível</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="individualDuration">Duração (minutos)</Label>
-                  <Input
-                    id="individualDuration"
-                    type="number"
-                    value={data.sessions.individualDuration}
-                    onChange={(e) =>
-                      updateSessions("individualDuration", parseInt(e.target.value) || 60)
-                    }
-                    placeholder="60"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="individualFormat">Formato</Label>
-                  <Select
-                    value={data.sessions.individualFormat}
-                    onValueChange={(value) => updateSessions("individualFormat", value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="online">Online</SelectItem>
-                      <SelectItem value="presencial">Presencial</SelectItem>
-                      <SelectItem value="hibrido">Híbrido</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="border rounded-lg p-4 space-y-4">
-                <h4 className="font-medium">Sessões em Grupo (Opcional)</h4>
-
-                <div className="space-y-2">
-                  <Label htmlFor="groupFrequency">Frequência</Label>
-                  <Select
-                    value={data.sessions.groupFrequency}
-                    onValueChange={(value) => updateSessions("groupFrequency", value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="nenhuma">Nenhuma</SelectItem>
-                      <SelectItem value="mensal">Mensal</SelectItem>
-                      <SelectItem value="bimestral">Bimestral</SelectItem>
-                      <SelectItem value="trimestral">Trimestral</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {data.sessions.groupFrequency !== "nenhuma" && (
+      {/* Form card */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+      >
+        <Card className="border shadow-lg rounded-3xl overflow-hidden">
+          <div>
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={currentStep}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                variants={contentVariants}
+              >
+                {/* Step 1: Identificação do Mentor */}
+                {currentStep === 0 && (
                   <>
-                    <div className="space-y-2">
-                      <Label htmlFor="groupDuration">Duração (minutos)</Label>
-                      <Input
-                        id="groupDuration"
-                        type="number"
-                        value={data.sessions.groupDuration}
-                        onChange={(e) =>
-                          updateSessions("groupDuration", parseInt(e.target.value) || 90)
-                        }
-                        placeholder="90"
-                      />
-                    </div>
+                    <CardHeader>
+                      <CardTitle>Identificação do Mentor</CardTitle>
+                      <CardDescription>
+                        Seus dados principais e redes sociais
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <motion.div variants={fadeInUp} className="space-y-2">
+                        <Label htmlFor="fullName">Nome Completo *</Label>
+                        <Input
+                          id="fullName"
+                          placeholder="João Silva"
+                          value={formData.fullName}
+                          onChange={(e) => updateFormData("fullName", e.target.value)}
+                          className="transition-all duration-300 focus:ring-2 focus:ring-primary/20"
+                        />
+                      </motion.div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="groupFormat">Formato</Label>
-                      <Select
-                        value={data.sessions.groupFormat}
-                        onValueChange={(value) => updateSessions("groupFormat", value)}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="online">Online</SelectItem>
-                          <SelectItem value="presencial">Presencial</SelectItem>
-                          <SelectItem value="hibrido">Híbrido</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
+                      <motion.div variants={fadeInUp} className="space-y-2">
+                        <Label htmlFor="email">Email *</Label>
+                        <Input
+                          id="email"
+                          type="email"
+                          placeholder="joao@exemplo.com"
+                          value={formData.email}
+                          onChange={(e) => updateFormData("email", e.target.value)}
+                          className="transition-all duration-300 focus:ring-2 focus:ring-primary/20"
+                        />
+                      </motion.div>
+
+                      <motion.div variants={fadeInUp} className="space-y-2">
+                        <Label htmlFor="linkedinUrl">LinkedIn (URL completa)</Label>
+                        <Input
+                          id="linkedinUrl"
+                          placeholder="https://linkedin.com/in/seu-perfil"
+                          value={formData.linkedinUrl}
+                          onChange={(e) => updateFormData("linkedinUrl", e.target.value)}
+                          className="transition-all duration-300 focus:ring-2 focus:ring-primary/20"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Usaremos para entender seu tom de voz e estilo
+                        </p>
+                      </motion.div>
+
+                      <motion.div variants={fadeInUp} className="space-y-2">
+                        <Label htmlFor="instagramUrl">Instagram (URL completa)</Label>
+                        <Input
+                          id="instagramUrl"
+                          placeholder="https://instagram.com/seu-perfil"
+                          value={formData.instagramUrl}
+                          onChange={(e) => updateFormData("instagramUrl", e.target.value)}
+                          className="transition-all duration-300 focus:ring-2 focus:ring-primary/20"
+                        />
+                      </motion.div>
+
+                      <motion.div variants={fadeInUp} className="space-y-2">
+                        <Label htmlFor="bio">Bio / Trajetória</Label>
+                        <Textarea
+                          id="bio"
+                          placeholder="Conte um pouco sobre sua experiência como mentor..."
+                          value={formData.bio}
+                          onChange={(e) => updateFormData("bio", e.target.value)}
+                          rows={4}
+                          className="transition-all duration-300 focus:ring-2 focus:ring-primary/20"
+                        />
+                      </motion.div>
+                    </CardContent>
                   </>
                 )}
-              </div>
-            </div>
-          )}
 
-          {/* STEP 4: Framework e Entregáveis */}
-          {step === 4 && (
-            <div className="space-y-6">
-              <h3 className="text-lg font-semibold">Framework e Entregáveis</h3>
+                {/* Step 2: Seu Club & Categoria MLS */}
+                {currentStep === 1 && (
+                  <>
+                    <CardHeader>
+                      <CardTitle>Seu Club & Categoria MLS</CardTitle>
+                      <CardDescription>
+                        Informações sobre seu club e mentorados
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <motion.div variants={fadeInUp} className="space-y-2">
+                        <Label htmlFor="clubName">Nome do seu Club MLS</Label>
+                        <Input
+                          id="clubName"
+                          placeholder="Ex: Brain, Prosperus, Mentalidade Master"
+                          value={formData.clubName}
+                          onChange={(e) => updateFormData("clubName", e.target.value)}
+                          className="transition-all duration-300 focus:ring-2 focus:ring-primary/20"
+                        />
+                      </motion.div>
 
-              <div className="space-y-2">
-                <Label htmlFor="methodology">Metodologia / Framework</Label>
-                <Select
-                  value={data.deliverables.methodology}
-                  onValueChange={(value) => updateDeliverables("methodology", value)}
+                      <motion.div variants={fadeInUp} className="space-y-3">
+                        <Label>Categoria do Club *</Label>
+                        <RadioGroup
+                          value={formData.clubCategory}
+                          onValueChange={(value) => updateFormData("clubCategory", value)}
+                          className="space-y-2"
+                        >
+                          {[
+                            { value: "bronze", label: "Bronze", price: "até R$100k/ano" },
+                            { value: "silver", label: "Silver", price: "R$100k - R$200k/ano" },
+                            { value: "gold", label: "Gold", price: "R$200k - R$300k/ano" },
+                            { value: "platinum", label: "Platinum", price: "R$300k - R$400k/ano" },
+                            { value: "diamond", label: "Diamond", price: "R$400k+/ano" },
+                          ].map((category, index) => (
+                            <motion.div
+                              key={category.value}
+                              className="flex items-center space-x-3 rounded-lg border p-4 cursor-pointer hover:bg-accent transition-colors"
+                              whileHover={{ scale: 1.02 }}
+                              whileTap={{ scale: 0.98 }}
+                              initial={{ opacity: 0, x: -10 }}
+                              animate={{ opacity: 1, x: 0, transition: { delay: 0.1 * index } }}
+                            >
+                              <RadioGroupItem value={category.value} id={category.value} />
+                              <Label htmlFor={category.value} className="cursor-pointer flex-1">
+                                <div className="font-medium">{category.label}</div>
+                                <div className="text-sm text-muted-foreground">{category.price}</div>
+                              </Label>
+                            </motion.div>
+                          ))}
+                        </RadioGroup>
+                      </motion.div>
+
+                      <motion.div variants={fadeInUp} className="space-y-2">
+                        <Label htmlFor="activeMentees">Número de mentorados ativos atualmente</Label>
+                        <Input
+                          id="activeMentees"
+                          type="number"
+                          placeholder="Ex: 5, 10, 15"
+                          value={formData.activeMentees || ""}
+                          onChange={(e) => updateFormData("activeMentees", parseInt(e.target.value) || 0)}
+                          className="transition-all duration-300 focus:ring-2 focus:ring-primary/20"
+                        />
+                      </motion.div>
+
+                      <motion.div variants={fadeInUp} className="space-y-2">
+                        <Label htmlFor="nicheArea">Nicho de atuação *</Label>
+                        <Input
+                          id="nicheArea"
+                          placeholder="Ex: Tech CEOs, E-commerce Founders, Sales Leaders"
+                          value={formData.nicheArea}
+                          onChange={(e) => updateFormData("nicheArea", e.target.value)}
+                          className="transition-all duration-300 focus:ring-2 focus:ring-primary/20"
+                        />
+                      </motion.div>
+
+                      <motion.div variants={fadeInUp} className="space-y-3">
+                        <Label>Principal fonte de entrada de mentorados</Label>
+                        <RadioGroup
+                          value={formData.mainSource}
+                          onValueChange={(value) => updateFormData("mainSource", value)}
+                          className="space-y-2"
+                        >
+                          {[
+                            { value: "mls-referral", label: "Indicação outros mentores MLS" },
+                            { value: "personal-network", label: "Network pessoal" },
+                            { value: "social-media", label: "LinkedIn / Redes sociais" },
+                            { value: "mls-events", label: "Eventos MLS" },
+                            { value: "other", label: "Outro" },
+                          ].map((source, index) => (
+                            <motion.div
+                              key={source.value}
+                              className="flex items-center space-x-2 rounded-md border p-3 cursor-pointer hover:bg-accent transition-colors"
+                              whileHover={{ scale: 1.02 }}
+                              whileTap={{ scale: 0.98 }}
+                              initial={{ opacity: 0, y: 10 }}
+                              animate={{ opacity: 1, y: 0, transition: { delay: 0.05 * index } }}
+                            >
+                              <RadioGroupItem value={source.value} id={source.value} />
+                              <Label htmlFor={source.value} className="cursor-pointer w-full">
+                                {source.label}
+                              </Label>
+                            </motion.div>
+                          ))}
+                        </RadioGroup>
+                      </motion.div>
+
+                      {formData.mainSource === "other" && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: "auto" }}
+                          exit={{ opacity: 0, height: 0 }}
+                          className="space-y-2"
+                        >
+                          <Label htmlFor="otherSource">Especifique:</Label>
+                          <Input
+                            id="otherSource"
+                            placeholder="Descreva a fonte"
+                            value={formData.otherSource}
+                            onChange={(e) => updateFormData("otherSource", e.target.value)}
+                            className="transition-all duration-300 focus:ring-2 focus:ring-primary/20"
+                          />
+                        </motion.div>
+                      )}
+                    </CardContent>
+                  </>
+                )}
+
+                {/* Step 3: Estrutura de Entregáveis */}
+                {currentStep === 2 && (
+                  <>
+                    <CardHeader>
+                      <CardTitle>Estrutura de Entregáveis</CardTitle>
+                      <CardDescription>
+                        Como você estrutura sessões e encontros
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                      {/* Encontros em Grupo */}
+                      <div className="border rounded-lg p-4 space-y-4">
+                        <h4 className="font-semibold">Encontros em Grupo</h4>
+
+                        <motion.div variants={fadeInUp} className="space-y-2">
+                          <Label>Frequência</Label>
+                          <Select
+                            value={formData.groupMeetingFrequency}
+                            onValueChange={(value) => updateFormData("groupMeetingFrequency", value)}
+                          >
+                            <SelectTrigger className="transition-all duration-300 focus:ring-2 focus:ring-primary/20">
+                              <SelectValue placeholder="Selecione" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="none">Não faço encontros em grupo</SelectItem>
+                              <SelectItem value="monthly">Mensal</SelectItem>
+                              <SelectItem value="bimonthly">Bimestral</SelectItem>
+                              <SelectItem value="quarterly">Trimestral</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </motion.div>
+
+                        {formData.groupMeetingFrequency !== "none" && (
+                          <>
+                            <motion.div
+                              initial={{ opacity: 0, height: 0 }}
+                              animate={{ opacity: 1, height: "auto" }}
+                              variants={fadeInUp}
+                              className="space-y-2"
+                            >
+                              <Label htmlFor="groupDuration">Duração média (minutos)</Label>
+                              <Input
+                                id="groupDuration"
+                                type="number"
+                                placeholder="90"
+                                value={formData.groupMeetingDuration || ""}
+                                onChange={(e) =>
+                                  updateFormData("groupMeetingDuration", parseInt(e.target.value) || 90)
+                                }
+                                className="transition-all duration-300 focus:ring-2 focus:ring-primary/20"
+                              />
+                            </motion.div>
+
+                            <motion.div
+                              initial={{ opacity: 0, height: 0 }}
+                              animate={{ opacity: 1, height: "auto" }}
+                              variants={fadeInUp}
+                              className="space-y-2"
+                            >
+                              <Label>Formato</Label>
+                              <Select
+                                value={formData.groupMeetingFormat}
+                                onValueChange={(value) => updateFormData("groupMeetingFormat", value)}
+                              >
+                                <SelectTrigger className="transition-all duration-300 focus:ring-2 focus:ring-primary/20">
+                                  <SelectValue placeholder="Selecione" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="online">Online</SelectItem>
+                                  <SelectItem value="presencial">Presencial</SelectItem>
+                                  <SelectItem value="hybrid">Híbrido</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </motion.div>
+                          </>
+                        )}
+                      </div>
+
+                      {/* Encontros Individuais 1-on-1 */}
+                      <div className="border rounded-lg p-4 space-y-4">
+                        <h4 className="font-semibold">Encontros Individuais 1-on-1</h4>
+
+                        <motion.div variants={fadeInUp} className="space-y-2">
+                          <Label>Frequência *</Label>
+                          <Select
+                            value={formData.individualFrequency}
+                            onValueChange={(value) => updateFormData("individualFrequency", value)}
+                          >
+                            <SelectTrigger className="transition-all duration-300 focus:ring-2 focus:ring-primary/20">
+                              <SelectValue placeholder="Selecione" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="weekly">Semanal</SelectItem>
+                              <SelectItem value="biweekly">Quinzenal</SelectItem>
+                              <SelectItem value="monthly">Mensal</SelectItem>
+                              <SelectItem value="flexible">Flexível</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </motion.div>
+
+                        <motion.div variants={fadeInUp} className="space-y-2">
+                          <Label htmlFor="individualDuration">Duração média (minutos)</Label>
+                          <Input
+                            id="individualDuration"
+                            type="number"
+                            placeholder="60"
+                            value={formData.individualDuration || ""}
+                            onChange={(e) =>
+                              updateFormData("individualDuration", parseInt(e.target.value) || 60)
+                            }
+                            className="transition-all duration-300 focus:ring-2 focus:ring-primary/20"
+                          />
+                        </motion.div>
+
+                        <motion.div variants={fadeInUp} className="space-y-2">
+                          <Label>Formato</Label>
+                          <Select
+                            value={formData.individualFormat}
+                            onValueChange={(value) => updateFormData("individualFormat", value)}
+                          >
+                            <SelectTrigger className="transition-all duration-300 focus:ring-2 focus:ring-primary/20">
+                              <SelectValue placeholder="Selecione" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="online">Online</SelectItem>
+                              <SelectItem value="presencial">Presencial</SelectItem>
+                              <SelectItem value="hybrid">Híbrido</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </motion.div>
+                      </div>
+
+                      {/* Comunicação Assíncrona */}
+                      <motion.div variants={fadeInUp} className="space-y-3">
+                        <Label>Comunicação Assíncrona</Label>
+                        <div className="grid grid-cols-1 gap-2">
+                          {[
+                            { value: "none", label: "Não utilizo" },
+                            { value: "chat", label: "Chat/WhatsApp disponível" },
+                            { value: "async-videos", label: "Vídeos assíncronos" },
+                            { value: "platform", label: "Plataforma própria" },
+                          ].map((item, index) => (
+                            <motion.div
+                              key={item.value}
+                              className="flex items-center space-x-2 rounded-md border p-3 cursor-pointer hover:bg-accent transition-colors"
+                              whileHover={{ scale: 1.02 }}
+                              whileTap={{ scale: 0.98 }}
+                              initial={{ opacity: 0, y: 10 }}
+                              animate={{ opacity: 1, y: 0, transition: { delay: 0.05 * index } }}
+                              onClick={() => toggleArrayItem("asyncCommunication", item.value)}
+                            >
+                              <Checkbox
+                                id={`async-${item.value}`}
+                                checked={formData.asyncCommunication.includes(item.value)}
+                                onCheckedChange={() => toggleArrayItem("asyncCommunication", item.value)}
+                              />
+                              <Label htmlFor={`async-${item.value}`} className="cursor-pointer w-full">
+                                {item.label}
+                              </Label>
+                            </motion.div>
+                          ))}
+                        </div>
+                      </motion.div>
+
+                      {/* Outros Entregáveis */}
+                      <motion.div variants={fadeInUp} className="space-y-3">
+                        <Label>Outros Entregáveis</Label>
+                        <div className="grid grid-cols-1 gap-2">
+                          {[
+                            { value: "action-plan", label: "Plano de Ação trimestral" },
+                            { value: "assessments", label: "Assessments periódicos" },
+                            { value: "exclusive-content", label: "Material exclusivo (ebooks, frameworks)" },
+                            { value: "community", label: "Acesso comunidade/network" },
+                            { value: "exclusive-events", label: "Eventos exclusivos" },
+                          ].map((item, index) => (
+                            <motion.div
+                              key={item.value}
+                              className="flex items-center space-x-2 rounded-md border p-3 cursor-pointer hover:bg-accent transition-colors"
+                              whileHover={{ scale: 1.02 }}
+                              whileTap={{ scale: 0.98 }}
+                              initial={{ opacity: 0, y: 10 }}
+                              animate={{ opacity: 1, y: 0, transition: { delay: 0.05 * index } }}
+                              onClick={() => toggleArrayItem("otherDeliverables", item.value)}
+                            >
+                              <Checkbox
+                                id={`deliverable-${item.value}`}
+                                checked={formData.otherDeliverables.includes(item.value)}
+                                onCheckedChange={() => toggleArrayItem("otherDeliverables", item.value)}
+                              />
+                              <Label htmlFor={`deliverable-${item.value}`} className="cursor-pointer w-full">
+                                {item.label}
+                              </Label>
+                            </motion.div>
+                          ))}
+                        </div>
+                      </motion.div>
+                    </CardContent>
+                  </>
+                )}
+
+                {/* Step 4: Metodologia & Outcomes */}
+                {currentStep === 3 && (
+                  <>
+                    <CardHeader>
+                      <CardTitle>Metodologia & Outcomes</CardTitle>
+                      <CardDescription>
+                        Como você trabalha e mede sucesso
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <motion.div variants={fadeInUp} className="space-y-3">
+                        <Label>Framework principal</Label>
+                        <RadioGroup
+                          value={formData.framework}
+                          onValueChange={(value) => updateFormData("framework", value)}
+                          className="space-y-2"
+                        >
+                          {[
+                            { value: "grow", label: "GROW (Goal, Reality, Options, Will)" },
+                            { value: "okr", label: "OKRs (Objectives & Key Results)" },
+                            { value: "smart", label: "SMART Goals" },
+                            { value: "custom", label: "Metodologia Própria" },
+                          ].map((fw, index) => (
+                            <motion.div
+                              key={fw.value}
+                              className="flex items-center space-x-2 rounded-md border p-3 cursor-pointer hover:bg-accent transition-colors"
+                              whileHover={{ scale: 1.02 }}
+                              whileTap={{ scale: 0.98 }}
+                              initial={{ opacity: 0, x: -10 }}
+                              animate={{ opacity: 1, x: 0, transition: { delay: 0.1 * index } }}
+                            >
+                              <RadioGroupItem value={fw.value} id={fw.value} />
+                              <Label htmlFor={fw.value} className="cursor-pointer w-full">
+                                {fw.label}
+                              </Label>
+                            </motion.div>
+                          ))}
+                        </RadioGroup>
+                      </motion.div>
+
+                      {formData.framework === "custom" && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: "auto" }}
+                          exit={{ opacity: 0, height: 0 }}
+                          className="space-y-2"
+                        >
+                          <Label htmlFor="customFramework">Descreva sua metodologia:</Label>
+                          <Textarea
+                            id="customFramework"
+                            placeholder="Ex: Uso uma combinação de design thinking + accountability mensal..."
+                            value={formData.customFramework}
+                            onChange={(e) => updateFormData("customFramework", e.target.value)}
+                            rows={3}
+                            className="transition-all duration-300 focus:ring-2 focus:ring-primary/20"
+                          />
+                        </motion.div>
+                      )}
+
+                      <motion.div variants={fadeInUp} className="space-y-3">
+                        <Label>Estilo de mentoria *</Label>
+                        <RadioGroup
+                          value={formData.mentoringStyle}
+                          onValueChange={(value) => updateFormData("mentoringStyle", value)}
+                          className="space-y-2"
+                        >
+                          {[
+                            { value: "directive", label: "Diretivo (mais orientação direta)" },
+                            { value: "coaching", label: "Coaching (perguntas provocativas)" },
+                            { value: "facilitator", label: "Facilitador (mentorado lidera)" },
+                            { value: "hybrid", label: "Híbrido (equilibrado)" },
+                          ].map((style, index) => (
+                            <motion.div
+                              key={style.value}
+                              className="flex items-center space-x-2 rounded-md border p-3 cursor-pointer hover:bg-accent transition-colors"
+                              whileHover={{ scale: 1.02 }}
+                              whileTap={{ scale: 0.98 }}
+                              initial={{ opacity: 0, y: 10 }}
+                              animate={{ opacity: 1, y: 0, transition: { delay: 0.05 * index } }}
+                            >
+                              <RadioGroupItem value={style.value} id={style.value} />
+                              <Label htmlFor={style.value} className="cursor-pointer w-full">
+                                {style.label}
+                              </Label>
+                            </motion.div>
+                          ))}
+                        </RadioGroup>
+                      </motion.div>
+
+                      <motion.div variants={fadeInUp} className="space-y-3">
+                        <Label>Como você mede sucesso do mentorado?</Label>
+                        <div className="grid grid-cols-1 gap-2">
+                          {[
+                            { value: "revenue-growth", label: "Crescimento de revenue" },
+                            { value: "goals-achievement", label: "Atingimento de metas definidas" },
+                            { value: "leadership-dev", label: "Desenvolvimento de liderança" },
+                            { value: "nps", label: "NPS / Satisfação" },
+                            { value: "renewal", label: "Renovação de contrato" },
+                          ].map((metric, index) => (
+                            <motion.div
+                              key={metric.value}
+                              className="flex items-center space-x-2 rounded-md border p-3 cursor-pointer hover:bg-accent transition-colors"
+                              whileHover={{ scale: 1.02 }}
+                              whileTap={{ scale: 0.98 }}
+                              initial={{ opacity: 0, y: 10 }}
+                              animate={{ opacity: 1, y: 0, transition: { delay: 0.05 * index } }}
+                              onClick={() => toggleArrayItem("successMetrics", metric.value)}
+                            >
+                              <Checkbox
+                                id={`metric-${metric.value}`}
+                                checked={formData.successMetrics.includes(metric.value)}
+                                onCheckedChange={() => toggleArrayItem("successMetrics", metric.value)}
+                              />
+                              <Label htmlFor={`metric-${metric.value}`} className="cursor-pointer w-full">
+                                {metric.label}
+                              </Label>
+                            </motion.div>
+                          ))}
+                        </div>
+                      </motion.div>
+                    </CardContent>
+                  </>
+                )}
+              </motion.div>
+            </AnimatePresence>
+
+            <CardFooter className="flex justify-between pt-6 pb-4">
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={prevStep}
+                  disabled={currentStep === 0}
+                  className="flex items-center gap-1 transition-all duration-300 rounded-2xl"
                 >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="GROW">GROW (Goal, Reality, Options, Will)</SelectItem>
-                    <SelectItem value="SMART">SMART Goals</SelectItem>
-                    <SelectItem value="OKR">OKRs (Objectives & Key Results)</SelectItem>
-                    <SelectItem value="PDCA">PDCA (Plan, Do, Check, Act)</SelectItem>
-                    <SelectItem value="custom">Metodologia Própria</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <Label>Entregáveis do Programa (Opcional)</Label>
-                  <Button type="button" variant="outline" size="sm" onClick={addDeliverable}>
-                    + Adicionar
-                  </Button>
-                </div>
-
-                {data.deliverables.deliverables.map((deliverable, index) => (
-                  <div key={index} className="border rounded-lg p-4 space-y-3">
-                    <div className="flex justify-between items-center">
-                      <h5 className="font-medium">Entregável {index + 1}</h5>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeDeliverable(index)}
-                      >
-                        Remover
-                      </Button>
-                    </div>
-
-                    <Input
-                      placeholder="Nome do entregável"
-                      value={deliverable.name}
-                      onChange={(e) => updateDeliverableField(index, "name", e.target.value)}
-                    />
-
-                    <Select
-                      value={deliverable.type}
-                      onValueChange={(value) => updateDeliverableField(index, "type", value)}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Tipo" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="document">Documento</SelectItem>
-                        <SelectItem value="presentation">Apresentação</SelectItem>
-                        <SelectItem value="plan">Plano de Ação</SelectItem>
-                        <SelectItem value="assessment">Autoavaliação</SelectItem>
-                      </SelectContent>
-                    </Select>
-
-                    <Textarea
-                      placeholder="Descrição"
-                      value={deliverable.description}
-                      onChange={(e) => updateDeliverableField(index, "description", e.target.value)}
-                      rows={2}
-                    />
-
-                    <Input
-                      type="number"
-                      placeholder="Prazo (dias após início)"
-                      value={deliverable.dueAfterDays}
-                      onChange={(e) =>
-                        updateDeliverableField(index, "dueAfterDays", parseInt(e.target.value) || 30)
-                      }
-                    />
-
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`mandatory-${index}`}
-                        checked={deliverable.isMandatory}
-                        onCheckedChange={(checked) =>
-                          updateDeliverableField(index, "isMandatory", checked)
-                        }
-                      />
-                      <Label htmlFor={`mandatory-${index}`} className="cursor-pointer">
-                        Obrigatório
-                      </Label>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <Label>Checkpoints de Avaliação (Opcional)</Label>
-                  <Button type="button" variant="outline" size="sm" onClick={addCheckpoint}>
-                    + Adicionar
-                  </Button>
-                </div>
-
-                {data.deliverables.checkpoints.map((checkpoint, index) => (
-                  <div key={index} className="border rounded-lg p-4 space-y-3">
-                    <div className="flex justify-between items-center">
-                      <h5 className="font-medium">Checkpoint {index + 1}</h5>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeCheckpoint(index)}
-                      >
-                        Remover
-                      </Button>
-                    </div>
-
-                    <Input
-                      placeholder="Nome do checkpoint"
-                      value={checkpoint.name}
-                      onChange={(e) => updateCheckpointField(index, "name", e.target.value)}
-                    />
-
-                    <Input
-                      type="number"
-                      placeholder="Frequência (dias)"
-                      value={checkpoint.frequencyDays}
-                      onChange={(e) =>
-                        updateCheckpointField(index, "frequencyDays", parseInt(e.target.value) || 30)
-                      }
-                    />
-
-                    <Textarea
-                      placeholder="Descrição"
-                      value={checkpoint.description}
-                      onChange={(e) => updateCheckpointField(index, "description", e.target.value)}
-                      rows={2}
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Animated Progress Navigation */}
-          <div className="mt-8">
-            <OnboardingProgress
-              currentStep={step}
-              totalSteps={4}
-              onBack={() => setStep((prev) => Math.max(1, prev - 1))}
-              onContinue={() => setStep((prev) => Math.min(4, prev + 1))}
-              onFinish={handleSubmit}
-              loading={loading}
-              isFirstStep={step === 1}
-              isFinalStep={step === 4}
-            />
+                  <ChevronLeft className="h-4 w-4" /> Voltar
+                </Button>
+              </motion.div>
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <Button
+                  type="button"
+                  onClick={currentStep === steps.length - 1 ? handleSubmit : nextStep}
+                  disabled={!isStepValid() || isSubmitting}
+                  className="flex items-center gap-1 transition-all duration-300 rounded-2xl"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" /> Salvando...
+                    </>
+                  ) : (
+                    <>
+                      {currentStep === steps.length - 1 ? "Concluir" : "Próximo"}
+                      {currentStep === steps.length - 1 ? (
+                        <Check className="h-4 w-4" />
+                      ) : (
+                        <ChevronRight className="h-4 w-4" />
+                      )}
+                    </>
+                  )}
+                </Button>
+              </motion.div>
+            </CardFooter>
           </div>
-        </CardContent>
-      </Card>
+        </Card>
+      </motion.div>
+
+      {/* Step indicator */}
+      <motion.div
+        className="mt-4 text-center text-sm text-muted-foreground"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5, delay: 0.4 }}
+      >
+        Etapa {currentStep + 1} de {steps.length}: {steps[currentStep].title}
+      </motion.div>
     </div>
   )
 }

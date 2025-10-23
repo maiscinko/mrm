@@ -62,13 +62,21 @@ export async function POST(request: Request) {
       .from('mentor_profiles')
       .upsert({
         user_id: user.id,
-        full_name: data.profile.fullName,
-        bio: data.profile.bio,
-        years_experience: data.profile.yearsExperience,
-        specialties: data.profile.specialties,
-        mentoring_style: data.profile.mentoringStyle,
-        is_mls_member: data.profile.isMlsMember,
-        mls_code: data.profile.mlsCode,
+        full_name: data.fullName,
+        email: data.email,
+        linkedin_url: data.linkedinUrl || null,
+        instagram_url: data.instagramUrl || null,
+        bio: data.bio || null,
+        club_name: data.clubName || null,
+        club_category: data.clubCategory,
+        active_mentees: data.activeMentees,
+        niche_area: data.nicheArea,
+        main_source: data.mainSource || null,
+        other_source: data.otherSource || null,
+        mentoring_style: data.mentoringStyle,
+        framework: data.framework || null,
+        custom_framework: data.customFramework || null,
+        success_metrics: data.successMetrics || [],
         updated_at: new Date().toISOString(),
       })
       .select()
@@ -84,24 +92,20 @@ export async function POST(request: Request) {
 
     console.log('[Onboarding] Profile created:', profileData)
 
-    // Step 2: Create mentoring program
+    // Step 2: Create mentoring program structure
     const { data: programData, error: programError } = await supabase
       .from('mentoring_programs')
       .insert({
         user_id: user.id,
-        program_name: data.program.programName,
-        billing_model: data.program.billingModel,
-        billing_amount: data.program.billingAmount,
-        cycle_duration_months: data.program.cycleDurationMonths,
-        individual_frequency: data.sessions.individualFrequency,
-        individual_duration: data.sessions.individualDuration,
-        individual_format: data.sessions.individualFormat,
-        group_frequency: data.sessions.groupFrequency,
-        group_duration: data.sessions.groupDuration,
-        group_format: data.sessions.groupFormat,
-        methodology: data.deliverables.methodology,
-        deliverables: data.deliverables.deliverables || [],
-        checkpoints: data.deliverables.checkpoints || [],
+        program_name: data.clubName || 'Programa Principal',
+        group_meeting_frequency: data.groupMeetingFrequency,
+        group_meeting_duration: data.groupMeetingDuration,
+        group_meeting_format: data.groupMeetingFormat || null,
+        individual_frequency: data.individualFrequency,
+        individual_duration: data.individualDuration,
+        individual_format: data.individualFormat,
+        async_communication: data.asyncCommunication || [],
+        other_deliverables: data.otherDeliverables || [],
       })
       .select()
       .single()
@@ -115,28 +119,6 @@ export async function POST(request: Request) {
     }
 
     console.log('[Onboarding] Program created:', programData)
-
-    // Step 3: Create program deliverables (if provided)
-    if (data.deliverables.deliverables && data.deliverables.deliverables.length > 0) {
-      const deliverablesInserts = data.deliverables.deliverables.map((d: any) => ({
-        program_id: programData.id,
-        deliverable_name: d.name,
-        deliverable_type: d.type,
-        description: d.description,
-        due_after_days: d.dueAfterDays,
-        is_mandatory: d.isMandatory,
-      }))
-
-      const { error: deliverablesError } = await supabase
-        .from('program_deliverables')
-        .insert(deliverablesInserts)
-
-      if (deliverablesError) {
-        console.error('[Onboarding] Deliverables error:', deliverablesError)
-        // Don't fail the entire onboarding if deliverables fail
-        console.warn('[Onboarding] Continuing despite deliverables error')
-      }
-    }
 
     return NextResponse.json({
       success: true,
@@ -184,7 +166,7 @@ export async function GET() {
   // Check if mentor profile exists
   const { data: profile, error } = await supabase
     .from('mentor_profiles')
-    .select('id, full_name, is_mls_member')
+    .select('id, full_name, club_category, club_name')
     .eq('user_id', user.id)
     .single()
 
