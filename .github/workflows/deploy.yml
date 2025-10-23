@@ -1,0 +1,57 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    name: Build & Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Add server to known hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Deploy to production server
+        run: |
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << 'ENDSSH'
+            cd /home/devuser/Desktop/abckx/mrm
+
+            echo "📥 Pulling latest changes..."
+            git pull origin main
+
+            echo "🐳 Building Docker image..."
+            DOCKER_BUILDKIT=1 docker compose build
+
+            echo "🚀 Deploying container..."
+            docker compose down
+            docker compose up -d
+
+            echo "⏳ Waiting for container to start..."
+            sleep 5
+
+            echo "✅ Checking health..."
+            curl -I https://mrm.a25.com.br || echo "⚠️ Health check failed"
+
+            echo "🎉 Deploy complete!"
+          ENDSSH
+
+      - name: Notify success
+        if: success()
+        run: echo "✅ Deploy successful! Check https://mrm.a25.com.br"
+
+      - name: Notify failure
+        if: failure()
+        run: echo "❌ Deploy failed! Check logs above"
