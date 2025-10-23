@@ -1,0 +1,14 @@
+[Unit]
+Description=MRM GitHub Webhook Auto-Deploy
+After=network.target
+
+[Service]
+Type=simple
+User=git-user
+WorkingDirectory=/home/devuser/Desktop/abckx/mrm/webhook
+EnvironmentFile=/home/devuser/Desktop/abckx/mrm/webhook/.env
+ExecStart=/usr/bin/node /home/devuser/Desktop/abckx/mrm/webhook/deploy.js
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
