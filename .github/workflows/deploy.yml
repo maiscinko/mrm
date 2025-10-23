@@ -17,17 +17,17 @@ jobs:
       - name: Setup SSH
         uses: webfactory/ssh-agent@v0.9.0
         with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY_DEV01 }}
 
       - name: Add server to known hosts
         run: |
           mkdir -p ~/.ssh
-          ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
+          ssh-keyscan -H ${{ secrets.SERVER_HOST_DEV01 }} >> ~/.ssh/known_hosts
 
       - name: Deploy to production server
         run: |
-          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << 'ENDSSH'
-            cd /home/devuser/Desktop/abckx/mrm
+          ssh ${{ secrets.SERVER_USER_DEV01 }}@${{ secrets.SERVER_HOST_DEV01 }} << 'ENDSSH'
+            cd /home/devuser/Desktop/abckx/mrm || { echo "Directory not found"; exit 1; }
 
             echo "📥 Pulling latest changes..."
             git pull origin main

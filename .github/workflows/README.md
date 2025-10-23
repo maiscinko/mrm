@@ -4,26 +4,28 @@
 
 Add these in **GitHub → Settings → Secrets and variables → Actions**:
 
-### 1. `SSH_PRIVATE_KEY`
-SSH private key to access production server.
+### 1. `SSH_PRIVATE_KEY_DEV01`
+SSH private key to access dev01 server (dev.a25.com.br).
 
 **Generate:**
 ```bash
-# On production server
-ssh-keygen -t ed25519 -C "github-actions-mrm"
+# On dev server
+ssh-keygen -t ed25519 -C "github-actions-mrm-dev01"
 cat ~/.ssh/id_ed25519.pub >> ~/.ssh/authorized_keys
 cat ~/.ssh/id_ed25519  # Copy this to GitHub secret
 ```
 
-### 2. `SERVER_HOST`
-Production server hostname or IP.
+**Note:** Use `_DEV01`, `_PROD01`, etc. to identify different environments.
 
-**Example:** `mrm.a25.com.br` or `123.456.789.0`
+### 2. `SERVER_HOST_DEV01`
+Dev server hostname or IP.
 
-### 3. `SERVER_USER`
-SSH user on production server.
+**Example:** `dev.a25.com.br`
 
-**Example:** `devuser`
+### 3. `SERVER_USER_DEV01`
+SSH user on dev server.
+
+**Example:** `git-user`
 
 ---
 
