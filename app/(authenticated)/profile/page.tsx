@@ -69,6 +69,8 @@ export default function ProfilePage() {
     }
   }
 
+  // ⚓ ANCHOR: SAVE PROFILE
+  // REASON: Manual save for basic info (full control)
   const saveProfile = async () => {
     setIsSaving(true)
     try {
@@ -96,6 +98,31 @@ export default function ProfilePage() {
       toast.error("Failed to save profile")
     } finally {
       setIsSaving(false)
+    }
+  }
+
+  // ⚓ ANCHOR: AUTO-SAVE AI TONE
+  // REASON: UX improvement - instant feedback, no need to remember clicking "Save"
+  // PATTERN: Debounced auto-save for better UX (user expects immediate persistence)
+  const saveAiTone = async (newTone: "provocative" | "empathetic" | "direct") => {
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+
+      if (!user) throw new Error("Not authenticated")
+
+      const { error } = await supabase
+        .from("mentor_profiles")
+        .update({ mentoring_style: newTone })
+        .eq("user_id", user.id)
+
+      if (error) throw error
+
+      toast.success(`AI tone updated to ${newTone}`)
+    } catch (error) {
+      console.error("[v0] Error saving AI tone:", error)
+      toast.error("Failed to save AI tone")
     }
   }
 
@@ -188,13 +215,16 @@ export default function ProfilePage() {
               <p className="text-sm text-muted-foreground">Customize how the AI assistant interacts with you</p>
             </CardHeader>
             <CardContent className="space-y-4">
+              {/* ⚓ ANCHOR: AI TONE SELECT */}
+              {/* UX: Auto-save on change - instant feedback, no need to click "Save" button */}
               <div className="space-y-2">
                 <Label htmlFor="ai_tone">AI Tone</Label>
                 <Select
                   value={profile.ai_tone}
-                  onValueChange={(value: "provocative" | "empathetic" | "direct") =>
+                  onValueChange={(value: "provocative" | "empathetic" | "direct") => {
                     setProfile({ ...profile, ai_tone: value })
-                  }
+                    saveAiTone(value)
+                  }}
                 >
                   <SelectTrigger>
                     <SelectValue />
