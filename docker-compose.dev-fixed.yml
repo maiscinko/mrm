@@ -24,17 +24,31 @@ services:
       # ⚓ Next.js build cache (acelera rebuild quando necessário)
       - mrm_dev_nextcache:/app/.next
 
-    # ⚓ ANCHOR: NO TRAEFIK (dev local simples)
-    # RAZÃO: Dev não precisa SSL, evita conflito prod
-    ports:
-      - "3456:3000"  # Porta diferente prod
+    # ⚓ ANCHOR: TRAEFIK FOR REMOTE ACCESS
+    # RAZÃO: User acessa via mrm.a25.com.br (não localhost)
+    networks:
+      - aleff-public
+
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.mrm-dev.rule=Host(`mrm-dev.a25.com.br`)"
+      - "traefik.http.routers.mrm-dev.entrypoints=websecure"
+      - "traefik.http.routers.mrm-dev.tls.certresolver=cloudflare"
+      - "traefik.http.services.mrm-dev.loadbalancer.server.port=3000"
+      - "traefik.http.routers.mrm-dev.middlewares=mrm-dev-headers"
+      # Custom headers for mrm-dev
+      - "traefik.http.middlewares.mrm-dev-headers.headers.customRequestHeaders.X-Forwarded-Proto=https"
+      - "traefik.http.middlewares.mrm-dev-headers.headers.customRequestHeaders.X-Forwarded-Host=mrm-dev.a25.com.br"
+      - "traefik.http.middlewares.mrm-dev-headers.headers.customResponseHeaders.X-Frame-Options=SAMEORIGIN"
+      - "traefik.http.middlewares.mrm-dev-headers.headers.customResponseHeaders.X-Content-Type-Options=nosniff"
+      - "traefik.http.middlewares.mrm-dev-headers.headers.customResponseHeaders.X-XSS-Protection=1; mode=block"
 
     env_file:
       - .env
 
     environment:
       - NODE_ENV=development
-      - NEXT_PUBLIC_APP_URL=http://localhost:3456
+      - NEXT_PUBLIC_APP_URL=https://mrm-dev.a25.com.br
 
       # ⚓ ANCHOR: POLLING TUNING
       # RAZÃO: Docker Mac/Windows não detecta file changes nativamente
@@ -76,3 +90,8 @@ volumes:
     driver: local
   mrm_dev_nextcache:
     driver: local
+
+# ⚓ ANCHOR: EXTERNAL NETWORK (Traefik)
+networks:
+  aleff-public:
+    external: true
