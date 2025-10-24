@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -13,14 +13,25 @@ import { Badge } from "@/components/ui/badge"
 import { toast } from "sonner"
 import { Loader2 } from "lucide-react"
 
+// ⚓ ANCHOR: TYPE DEFINITIONS
+// REASON: Type safety for profile data and save operations
+type ProfileData = {
+  full_name: string
+  bio: string
+  specialties: string[]
+  ai_tone: "provocative" | "empathetic" | "direct"
+  mls_member: boolean
+  mls_code: string
+}
+
 export default function ProfilePage() {
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
-  const [profile, setProfile] = useState({
+  const [profile, setProfile] = useState<ProfileData>({
     full_name: "",
     bio: "",
-    specialties: [] as string[],
-    ai_tone: "empathetic" as "provocative" | "empathetic" | "direct",
+    specialties: [],
+    ai_tone: "empathetic",
     mls_member: false,
     mls_code: "",
   })
@@ -28,10 +39,24 @@ export default function ProfilePage() {
   const supabase = createClient()
   const router = useRouter()
 
+  // ⚓ ANCHOR: DEBOUNCE TIMER
+  // REASON: Prevent excessive DB writes (auto-save after 1s of no changes)
+  const saveTimerRef = useRef<NodeJS.Timeout | null>(null)
+
   useEffect(() => {
     loadProfile()
+
+    // ⚓ ANCHOR: CLEANUP TIMER ON UNMOUNT
+    // REASON: Prevent memory leaks from pending debounced saves
+    return () => {
+      if (saveTimerRef.current) {
+        clearTimeout(saveTimerRef.current)
+      }
+    }
   }, [])
 
+  // ⚓ ANCHOR: LOAD PROFILE
+  // REASON: Fetch mentor profile from DB on mount
   const loadProfile = async () => {
     try {
       const {
@@ -49,9 +74,13 @@ export default function ProfilePage() {
         .eq("user_id", user.id)
         .single()
 
-      if (error) throw error
+      if (error) {
+        console.error("[Profile] Load error:", error)
+        throw error
+      }
 
       if (data) {
+        console.log("[Profile] Loaded:", data)
         setProfile({
           full_name: data.full_name || "",
           bio: data.bio || "",
@@ -62,79 +91,97 @@ export default function ProfilePage() {
         })
       }
     } catch (error) {
-      console.error("[v0] Error loading profile:", error)
+      console.error("[Profile] Error loading profile:", error)
       toast.error("Failed to load profile")
     } finally {
       setIsLoading(false)
     }
   }
 
-  // ⚓ ANCHOR: SAVE PROFILE
-  // REASON: Manual save for basic info (full control)
-  const saveProfile = async () => {
-    setIsSaving(true)
-    try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
+  // ⚓ ANCHOR: AUTO-SAVE WITH DEBOUNCE
+  // REASON: Save changes automatically after 1s of no typing (better UX than manual save button)
+  // PATTERN: Debounced saves prevent excessive DB writes (e.g., typing "John" = 1 save, not 4)
+  const autoSaveProfile = useCallback(
+    async (updates: Partial<ProfileData>) => {
+      try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser()
 
-      if (!user) throw new Error("Not authenticated")
+        if (!user) throw new Error("Not authenticated")
 
-      const { error } = await supabase
-        .from("mentor_profiles")
-        .update({
-          full_name: profile.full_name,
-          bio: profile.bio,
-          specialties: profile.specialties,
-          mentoring_style: profile.ai_tone,
-        })
-        .eq("user_id", user.id)
+        // ⚓ Map local field names to DB column names
+        const dbUpdates: Record<string, any> = {}
+        if ("full_name" in updates) dbUpdates.full_name = updates.full_name
+        if ("bio" in updates) dbUpdates.bio = updates.bio
+        if ("specialties" in updates) dbUpdates.specialties = updates.specialties
+        if ("ai_tone" in updates) dbUpdates.mentoring_style = updates.ai_tone
 
-      if (error) throw error
+        console.log("[Profile] Auto-saving:", dbUpdates)
 
-      toast.success("Profile updated successfully")
-    } catch (error) {
-      console.error("[v0] Error saving profile:", error)
-      toast.error("Failed to save profile")
-    } finally {
-      setIsSaving(false)
-    }
-  }
+        const { error, data } = await supabase
+          .from("mentor_profiles")
+          .update(dbUpdates)
+          .eq("user_id", user.id)
+          .select()
 
-  // ⚓ ANCHOR: AUTO-SAVE AI TONE
-  // REASON: UX improvement - instant feedback, no need to remember clicking "Save"
-  // PATTERN: Debounced auto-save for better UX (user expects immediate persistence)
-  const saveAiTone = async (newTone: "provocative" | "empathetic" | "direct") => {
-    try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
+        if (error) {
+          console.error("[Profile] Save error:", error)
+          throw error
+        }
 
-      if (!user) throw new Error("Not authenticated")
+        console.log("[Profile] Saved successfully:", data)
 
-      const { error } = await supabase
-        .from("mentor_profiles")
-        .update({ mentoring_style: newTone })
-        .eq("user_id", user.id)
+        // ⚓ UX: Subtle feedback (no toast spam while typing)
+        setIsSaving(false)
+      } catch (error) {
+        console.error("[Profile] Error auto-saving:", error)
+        toast.error("Failed to save changes")
+        setIsSaving(false)
+      }
+    },
+    [supabase]
+  )
 
-      if (error) throw error
+  // ⚓ ANCHOR: DEBOUNCED UPDATE
+  // REASON: Trigger auto-save 1s after user stops typing
+  const debouncedSave = useCallback(
+    (updates: Partial<ProfileData>) => {
+      // Clear existing timer
+      if (saveTimerRef.current) {
+        clearTimeout(saveTimerRef.current)
+      }
 
-      toast.success(`AI tone updated to ${newTone}`)
-    } catch (error) {
-      console.error("[v0] Error saving AI tone:", error)
-      toast.error("Failed to save AI tone")
-    }
-  }
+      // Show saving indicator immediately
+      setIsSaving(true)
 
+      // Set new timer for 1s
+      saveTimerRef.current = setTimeout(() => {
+        autoSaveProfile(updates)
+      }, 1000)
+    },
+    [autoSaveProfile]
+  )
+
+  // ⚓ ANCHOR: SPECIALTY MANAGEMENT
+  // REASON: Add/remove specialties with auto-save
   const addSpecialty = () => {
     if (specialtyInput.trim() && !profile.specialties.includes(specialtyInput.trim())) {
-      setProfile({ ...profile, specialties: [...profile.specialties, specialtyInput.trim()] })
+      const newSpecialties = [...profile.specialties, specialtyInput.trim()]
+      setProfile({ ...profile, specialties: newSpecialties })
       setSpecialtyInput("")
+
+      // ⚓ Auto-save immediately (no debounce for button clicks)
+      autoSaveProfile({ specialties: newSpecialties })
     }
   }
 
   const removeSpecialty = (specialty: string) => {
-    setProfile({ ...profile, specialties: profile.specialties.filter((s) => s !== specialty) })
+    const newSpecialties = profile.specialties.filter((s) => s !== specialty)
+    setProfile({ ...profile, specialties: newSpecialties })
+
+    // ⚓ Auto-save immediately
+    autoSaveProfile({ specialties: newSpecialties })
   }
 
   if (isLoading) {
@@ -157,22 +204,34 @@ export default function ProfilePage() {
               <CardTitle>Basic Information</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+              {/* ⚓ ANCHOR: FULL NAME INPUT */}
+              {/* UX: Auto-save with debounce - saves 1s after user stops typing */}
               <div className="space-y-2">
                 <Label htmlFor="full_name">Full Name</Label>
                 <Input
                   id="full_name"
                   value={profile.full_name}
-                  onChange={(e) => setProfile({ ...profile, full_name: e.target.value })}
+                  onChange={(e) => {
+                    const newValue = e.target.value
+                    setProfile({ ...profile, full_name: newValue })
+                    debouncedSave({ full_name: newValue })
+                  }}
                   placeholder="Your full name"
                 />
               </div>
 
+              {/* ⚓ ANCHOR: BIO INPUT */}
+              {/* UX: Auto-save with debounce - saves 1s after user stops typing */}
               <div className="space-y-2">
                 <Label htmlFor="bio">Bio</Label>
                 <Textarea
                   id="bio"
                   value={profile.bio}
-                  onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
+                  onChange={(e) => {
+                    const newValue = e.target.value
+                    setProfile({ ...profile, bio: newValue })
+                    debouncedSave({ bio: newValue })
+                  }}
                   placeholder="Tell us about yourself..."
                   rows={4}
                 />
@@ -216,14 +275,14 @@ export default function ProfilePage() {
             </CardHeader>
             <CardContent className="space-y-4">
               {/* ⚓ ANCHOR: AI TONE SELECT */}
-              {/* UX: Auto-save on change - instant feedback, no need to click "Save" button */}
+              {/* UX: Auto-save immediately on change (no debounce for dropdowns) */}
               <div className="space-y-2">
                 <Label htmlFor="ai_tone">AI Tone</Label>
                 <Select
                   value={profile.ai_tone}
                   onValueChange={(value: "provocative" | "empathetic" | "direct") => {
                     setProfile({ ...profile, ai_tone: value })
-                    saveAiTone(value)
+                    autoSaveProfile({ ai_tone: value })
                   }}
                 >
                   <SelectTrigger>
@@ -260,17 +319,20 @@ export default function ProfilePage() {
             </Card>
           )}
 
+          {/* ⚓ ANCHOR: AUTO-SAVE INDICATOR */}
+          {/* UX: Subtle feedback that changes are being saved automatically */}
           <div className="flex justify-end">
-            <Button onClick={saveProfile} disabled={isSaving} size="lg">
-              {isSaving ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Saving...
-                </>
-              ) : (
-                "Save Profile"
-              )}
-            </Button>
+            {isSaving && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>Saving...</span>
+              </div>
+            )}
+            {!isSaving && (
+              <div className="text-sm text-muted-foreground">
+                All changes saved automatically
+              </div>
+            )}
           </div>
         </div>
       </div>
