@@ -81,11 +81,21 @@ export default function ProfilePage() {
 
       if (data) {
         console.log("[Profile] Loaded:", data)
+
+        // ⚓ ANCHOR: VALIDATE AI TONE
+        // REASON: DB may have invalid values - default to empathetic if invalid
+        const validTones = ["provocative", "empathetic", "direct"]
+        const aiTone = validTones.includes(data.mentoring_style)
+          ? (data.mentoring_style as "provocative" | "empathetic" | "direct")
+          : "empathetic"
+
+        console.log("[Profile] AI Tone:", data.mentoring_style, "→", aiTone)
+
         setProfile({
           full_name: data.full_name || "",
           bio: data.bio || "",
           specialties: data.specialties || [],
-          ai_tone: data.mentoring_style || "empathetic",
+          ai_tone: aiTone,
           mls_member: data.is_mls_member || false,
           mls_code: data.mls_code || "",
         })
@@ -103,12 +113,20 @@ export default function ProfilePage() {
   // PATTERN: Debounced saves prevent excessive DB writes (e.g., typing "John" = 1 save, not 4)
   const autoSaveProfile = useCallback(
     async (updates: Partial<ProfileData>) => {
+      console.log("[Profile] Auto-save START:", updates)
+
       try {
         const {
           data: { user },
+          error: authError,
         } = await supabase.auth.getUser()
 
-        if (!user) throw new Error("Not authenticated")
+        console.log("[Profile] Auth check:", { user: user?.id, authError })
+
+        if (!user) {
+          console.error("[Profile] No user - redirecting to login")
+          throw new Error("Not authenticated")
+        }
 
         // ⚓ Map local field names to DB column names
         const dbUpdates: Record<string, any> = {}
@@ -117,7 +135,10 @@ export default function ProfilePage() {
         if ("specialties" in updates) dbUpdates.specialties = updates.specialties
         if ("ai_tone" in updates) dbUpdates.mentoring_style = updates.ai_tone
 
-        console.log("[Profile] Auto-saving:", dbUpdates)
+        console.log("[Profile] Sending UPDATE to DB:", {
+          updates: dbUpdates,
+          userId: user.id,
+        })
 
         const { error, data } = await supabase
           .from("mentor_profiles")
@@ -125,12 +146,24 @@ export default function ProfilePage() {
           .eq("user_id", user.id)
           .select()
 
+        console.log("[Profile] DB Response:", { error, data })
+
         if (error) {
-          console.error("[Profile] Save error:", error)
+          console.error("[Profile] Save error DETAIL:", {
+            message: error.message,
+            details: error.details,
+            hint: error.hint,
+            code: error.code,
+          })
           throw error
         }
 
-        console.log("[Profile] Saved successfully:", data)
+        console.log("[Profile] ✅ Saved successfully to DB:", data)
+
+        // ⚓ UX: Show success toast for AI Tone changes (immediate feedback)
+        if ("mentoring_style" in dbUpdates) {
+          toast.success("AI Tone updated successfully")
+        }
 
         // ⚓ UX: Subtle feedback (no toast spam while typing)
         setIsSaving(false)
