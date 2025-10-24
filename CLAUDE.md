@@ -662,4 +662,214 @@ VALUES (
 
 ---
 
+## 🛠️ **CODING STANDARDS & WORKFLOWS (NEW - 2025-10-24)**
+
+### **1. ANCHOR COMMENTS PATTERN**
+**PURPOSE:** Code navigation for "future you" - help PM/devs quickly understand code sections
+
+**PATTERN:**
+```typescript
+// ⚓ ANCHOR: SECTION_NAME
+// REASON: Why this code exists (problem solved)
+// PATTERN: How it works (technical approach)
+// UX: User experience considerations (if applicable)
+```
+
+**WHEN TO USE:**
+- ✅ Complex logic sections (algorithms, state management)
+- ✅ Critical business logic (auth, payments, data transformations)
+- ✅ Performance optimizations (caching, lazy loading)
+- ✅ UX-critical code (auto-save, loading states, error handling)
+- ❌ NOT for trivial code (simple getters, basic rendering)
+
+**EXAMPLE:**
+```typescript
+// ⚓ ANCHOR: AUTO-SAVE AI TONE
+// REASON: UX improvement - instant feedback, no need to remember clicking "Save"
+// PATTERN: Debounced auto-save for better UX (user expects immediate persistence)
+const saveAiTone = async (newTone) => {
+  // ... implementation
+}
+```
+
+---
+
+### **2. UX DESIGN PRINCIPLES (ALWAYS APPLY)**
+**4 PILLARS - NEVER SHIP WITHOUT:**
+
+**1. Visual Hierarchy**
+- Touch-friendly sizes (min 44x44px click targets)
+- Consistent icon sizes (20px standard)
+- Proper spacing (8px grid system)
+- Clear typography hierarchy (h1-h6, body, caption)
+
+**2. Consistency**
+- Uniform padding/margin patterns
+- Same hover/active states
+- Consistent color palette (design tokens)
+- Predictable component behavior
+
+**3. Feedback**
+- Loading states (spinners, skeletons)
+- Success/error toasts
+- Active states (selected, focused)
+- Hover effects (subtle, not distracting)
+
+**4. Accessibility**
+- Keyboard navigation (Tab, Enter, Esc)
+- Screen reader labels (aria-label, role)
+- Color contrast WCAG AA (4.5:1 text, 3:1 UI)
+- Tooltips for icon-only buttons
+
+**VALIDATION CHECKLIST (before commit):**
+- [ ] Touch targets ≥44px?
+- [ ] Loading states exist?
+- [ ] Error states clear?
+- [ ] Keyboard navigable?
+- [ ] Mobile responsive?
+
+---
+
+### **3. mrm_memory CHANGELOG WORKFLOW**
+**PURPOSE:** Product decision log - handoff-ready, PM ownership, CPO oversight
+
+**WHEN TO INSERT (ALWAYS ALWAYS ALWAYS):**
+1. ✅ **Feature shipped** (ex: Chat IA POST implementado)
+2. ✅ **Technical decision** (ex: Escolha POST vs Streaming)
+3. ✅ **Critical learning** (ex: v0 gera 90% POST correto)
+4. ✅ **Milestone reached** (ex: MVP deployed production)
+5. ✅ **PMF indicator update** (ex: Pilot week 1: NPS 80)
+6. ✅ **Bug crítico resolved** (ex: RLS policy security fix)
+
+**TEMPLATE:**
+```sql
+INSERT INTO mrm_memory (message, decision_type)
+VALUES (
+  '{
+    "type": "feature_decision",
+    "title": "[TÍTULO CURTO]",
+    "date": "2025-10-24",
+    "context": "[Por quê fizemos isso]",
+    "what": "[O que mudou]",
+    "impact": "[Impacto no produto/mentor]",
+    "next_steps": ["[Próximo 1]", "[Próximo 2]"]
+  }'::jsonb,
+  'feature_decision'  -- milestone | feature | bug | technical | checkpoint | problem
+);
+```
+
+**BENEFITS:**
+- 📜 Complete product timeline
+- 🔄 Fast context for new PMs
+- 🎯 CPO oversight on critical decisions
+- 🐛 Bug patterns identification
+- 📊 PMF progress tracking
+
+---
+
+### **4. COMMIT AS SAFE PLACE TO WORK**
+**PHILOSOPHY:** Git commit = checkpoint game. Should ALWAYS be safe to rollback.
+
+**COMMIT STANDARDS:**
+**1. Build passes** ✅
+```bash
+npm run build  # Zero errors before commit
+```
+
+**2. Descriptive message** ✅
+```
+feat(ux): Comprehensive UX improvements + Auto-save AI tone
+
+CHANGES - Sidebar:
+- Icons centered when collapsed
+- Improved logout button UX
+
+CHANGES - Profile:
+- AI tone auto-save (no button click needed)
+
+UX PRINCIPLES APPLIED:
+- Visual hierarchy, consistency, feedback, accessibility
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+Co-Authored-By: Claude <noreply@anthropic.com>
+```
+
+**3. Atomic commits** ✅
+- One logical change per commit
+- NOT: "fix stuff" (too vague)
+- YES: "fix(profile): AI tone selector auto-save" (clear scope)
+
+**4. Test critical paths** ✅
+- Auth flows work?
+- Data saves correctly?
+- No console errors?
+
+**ROLLBACK SAFETY:**
+```bash
+# If commit broke something
+git revert HEAD  # Safe rollback, keeps history
+
+# Never do (unless emergency)
+git reset --hard HEAD~1  # Destroys history
+```
+
+---
+
+### **5. HOT RELOAD DEV WORKFLOW**
+**REFERENCE:** See `DEV-WORKFLOW-GARANTIDO.md` for full guide
+
+**QUICK START:**
+```bash
+cd /home/devuser/Desktop/abckx/aleff/cpo/produtos/mrm/mrm-saas
+docker compose -f docker-compose.dev-fixed.yml up
+
+# ✅ Dependencies already installed, skipping...
+# 🚀 Starting Next.js dev server with hot reload...
+# ✓ Ready in 2.3s
+```
+
+**BENEFITS:**
+- 🔥 Hot reload 1-2s (não 10min builds)
+- 🚀 Named volumes persist node_modules
+- 📊 CHOKIDAR polling 300ms optimized
+- 🎯 Local port 3456 (no Traefik conflict)
+
+**WHEN TO USE:**
+- ✅ Developing features (fast iteration)
+- ✅ Testing UI/UX changes
+- ✅ Debugging (instant feedback)
+
+**WHEN TO USE PROD MODE:**
+- ✅ Validar build otimizado
+- ✅ Test performance prod-like
+- ✅ Deploy staging/production
+
+---
+
+### **6. PRISMA DECISION (AS OF 2025-10-24)**
+**STATUS:** ❌ **NO Prisma migration for MVP**
+
+**REASONS:**
+- ✅ Raw Supabase-js working perfectly
+- ✅ Zero issues, RLS working, auth integrated
+- ✅ Less complexity, faster MVP iteration
+- ✅ Supabase-native features (RLS, real-time)
+- ✅ Hot reload working (no Prisma generate overhead)
+
+**CONS OF MIGRATING:**
+- ❌ Build overhead (prisma generate)
+- ❌ Deploy complexity (migrations in CI/CD)
+- ❌ RLS limitations (Prisma não suporta nativamente)
+- ❌ Larger bundle (+500KB)
+- ❌ 4-6 hours migration + testing
+
+**WHEN TO RECONSIDER:**
+- ⏰ After PMF (when codebase >10 tables)
+- ⏰ If team scales (multiple devs need type safety)
+- ⏰ If migrating away from Supabase
+
+**VERDICT:** Keep raw Supabase-js until post-MVP. Revisit after pilot feedback.
+
+---
+
 **PM MELISA STATUS:** ✅ READY - DB produto + gestão completos. Próximo: Fase 3 (Frontend Generation v0).
