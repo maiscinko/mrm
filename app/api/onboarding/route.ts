@@ -60,25 +60,28 @@ export async function POST(request: Request) {
     // Step 1: Create or update mentor profile
     const { data: profileData, error: profileError } = await supabase
       .from('mentor_profiles')
-      .upsert({
-        user_id: user.id,
-        full_name: data.fullName,
-        email: data.email,
-        linkedin_url: data.linkedinUrl || null,
-        instagram_url: data.instagramUrl || null,
-        bio: data.bio || null,
-        club_name: data.clubName || null,
-        club_category: data.clubCategory,
-        active_mentees: data.activeMentees,
-        niche_area: data.nicheArea,
-        main_sources: data.mainSources || [],
-        other_source: data.otherSource || null,
-        mentoring_style: data.mentoringStyle,
-        framework: data.framework || null,
-        custom_framework: data.customFramework || null,
-        success_metrics: data.successMetrics || [],
-        updated_at: new Date().toISOString(),
-      })
+      .upsert(
+        {
+          user_id: user.id,
+          full_name: data.fullName,
+          email: data.email,
+          linkedin_url: data.linkedinUrl || null,
+          instagram_url: data.instagramUrl || null,
+          bio: data.bio || null,
+          club_name: data.clubName || null,
+          club_category: data.clubCategory,
+          active_mentees: data.activeMentees,
+          niche_area: data.nicheArea,
+          main_sources: data.mainSources || [],
+          other_source: data.otherSource || null,
+          mentoring_style: data.mentoringStyle,
+          framework: data.framework || null,
+          custom_framework: data.customFramework || null,
+          success_metrics: data.successMetrics || [],
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: 'user_id' }
+      )
       .select()
       .single()
 
@@ -92,29 +95,55 @@ export async function POST(request: Request) {
 
     console.log('[Onboarding] Profile created:', profileData)
 
-    // Step 2: Create or update mentoring program structure
-    const { data: programData, error: programError } = await supabase
+    // Step 2: Check if mentoring program exists
+    const { data: existingProgram } = await supabase
       .from('mentoring_programs')
-      .upsert({
-        user_id: user.id,
-        program_name: data.clubName || 'Main Program',
-        // Group meetings (optional)
-        group_deliverable_name: data.groupDeliverableName || null,
-        group_meeting_format: data.groupMeetingFormat || null,
-        group_meeting_frequency: data.groupMeetingFrequency || null,
-        group_meeting_duration: data.groupMeetingDuration || null,
-        // Individual 1-on-1 sessions (required)
-        individual_total_in_period: data.individualTotalInPeriod,
-        individual_duration: data.individualDuration,
-        individual_format: data.individualFormat,
-        // Communication methods
-        communication_methods: data.communicationMethods || [],
-        custom_communication_method: data.customCommunicationMethod || null,
-        other_deliverables: data.otherDeliverables || [],
-        custom_other_deliverable: data.customOtherDeliverable || null,
-      })
-      .select()
+      .select('id')
+      .eq('user_id', user.id)
       .single()
+
+    const programPayload = {
+      user_id: user.id,
+      program_name: data.clubName || 'Main Program',
+      // Group meetings (optional)
+      group_deliverable_name: data.groupDeliverableName || null,
+      group_meeting_format: data.groupMeetingFormat || null,
+      group_meeting_frequency: data.groupMeetingFrequency || null,
+      group_meeting_duration: data.groupMeetingDuration || null,
+      // Individual 1-on-1 sessions (required)
+      individual_total_in_period: data.individualTotalInPeriod,
+      individual_duration: data.individualDuration,
+      individual_format: data.individualFormat,
+      // Communication methods
+      communication_methods: data.communicationMethods || [],
+      custom_communication_method: data.customCommunicationMethod || null,
+      other_deliverables: data.otherDeliverables || [],
+      custom_other_deliverable: data.customOtherDeliverable || null,
+    }
+
+    let programData
+    let programError
+
+    if (existingProgram) {
+      // Update existing program
+      const result = await supabase
+        .from('mentoring_programs')
+        .update(programPayload)
+        .eq('id', existingProgram.id)
+        .select()
+        .single()
+      programData = result.data
+      programError = result.error
+    } else {
+      // Create new program
+      const result = await supabase
+        .from('mentoring_programs')
+        .insert(programPayload)
+        .select()
+        .single()
+      programData = result.data
+      programError = result.error
+    }
 
     if (programError) {
       console.error('[Onboarding] Program error:', programError)
