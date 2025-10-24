@@ -85,7 +85,7 @@ Se qualquer resposta "não" → **ESCALAR CPO antes implementar**.
 **Propósito:** Production app data (mentors reais usando)
 **PM acessa via:** MCP `mcp__supabase_product_mrm__*`
 
-**Tabelas (7):**
+**Tabelas (8):**
 ```
 users (mentors reais)
 mentees (mentorados reais)
@@ -94,6 +94,7 @@ deliverables (entregáveis reais)
 progress_tracking (métricas reais)
 ai_insights (cache IA real)
 mrm_memory (📜 CHANGELOG PRODUTO - decisões, bugs, learnings)
+mrm_todo (📋 TASK TRACKING - todas tasks/features em andamento)
 ```
 
 **⚠️ IMPORTANTE: mrm_memory é o CHANGELOG oficial do produto**
@@ -101,6 +102,71 @@ mrm_memory (📜 CHANGELOG PRODUTO - decisões, bugs, learnings)
 - **SEMPRE inserir** quando: feature shipped, bug crítico, decisão técnica, PMF update
 - **decision_type valores:** milestone, feature, bug, technical, checkpoint, problem
 - **Query antes começar sessão:** Ler últimos 10 entries para contexto completo
+
+**⚠️ CRÍTICO: mrm_todo é o TASK TRACKER oficial (CPO Visibility + BI futuro)**
+- **Purpose:** Tracking CONTÍNUO de todas tasks, features, bugs, improvements em desenvolvimento
+- **PM ownership:** SEMPRE atualizar quando iniciar task, mudar status, ou completar
+- **Transparência CPO:** CPO pode ver progresso real-time sem perguntar
+- **BI ready:** Estrutura preparada para dashboards futuros (cycle time, throughput, lead time)
+
+**QUANDO USAR mrm_todo:**
+
+**1. SEMPRE INSERIR quando:**
+- ✅ Receber nova feature request do usuário/CPO
+- ✅ Identificar bug que precisa fix
+- ✅ Planejar melhoria técnica (refactoring, performance, etc)
+- ✅ Criar subtask de feature grande
+- ✅ Escalar task para outro PAI (CTO, design, QA)
+
+**2. SEMPRE ATUALIZAR status quando:**
+- ✅ Começar trabalhar numa task: `pending` → `in_progress`
+- ✅ Bloquear por dependência: `in_progress` → `blocked` (+ comment explicando)
+- ✅ Completar task: `in_progress` → `completed` (auto-seta completed_at)
+- ✅ Cancelar task: qualquer → `cancelled` (+ comment motivo)
+
+**3. SEMPRE ATUALIZAR comment quando:**
+- ✅ Progresso significativo (ex: "50% completo, falta API integration")
+- ✅ Blocker encontrado (ex: "Aguardando CTO setup OAuth keys")
+- ✅ Decisão técnica tomada (ex: "Escolhido POST vs streaming por simplicidade")
+
+**TEMPLATE INSERT NOVA TASK:**
+```sql
+INSERT INTO mrm_todo (title, description, pai, status, priority, urgency, requester, comment)
+VALUES (
+  'Fix profile auto-save functionality',
+  'Implementar auto-save com debounce (1s text, imediato dropdowns). Files: profile/page.tsx',
+  'pm',
+  'in_progress',
+  1,  -- 1=highest, 5=lowest
+  'high',  -- critical/high/medium/low
+  'user',
+  'Started: Implemented autoSaveProfile() with debounce pattern'
+);
+```
+
+**TEMPLATE UPDATE STATUS:**
+```sql
+UPDATE mrm_todo
+SET
+  status = 'completed',
+  comment = 'Deployed to production. Tested: name, bio, AI tone, specialties all saving correctly.'
+WHERE id = '[task_id]';
+```
+
+**QUERY TASKS ATIVAS (inicio sessão):**
+```sql
+SELECT
+  id,
+  title,
+  status,
+  priority,
+  urgency,
+  pai,
+  LEFT(comment, 100) as latest_comment
+FROM mrm_todo
+WHERE status IN ('pending', 'in_progress', 'blocked')
+ORDER BY priority, urgency DESC, created_at;
+```
 
 **PM PODE:**
 - ✅ FULL ACCESS (SELECT, INSERT, UPDATE, DELETE)
@@ -309,7 +375,78 @@ VALUES (
 
 ---
 
-### **4. LER PRODUCTION METRICS (DB Produto)**
+### **4. LER TASKS ATIVAS (mrm_todo - CRITICAL)**
+
+**SEMPRE ler tasks pendentes/in_progress/blocked:**
+```sql
+-- TASKS ATIVAS (CPO visibility + PM tracking)
+SELECT
+  id,
+  title,
+  status,
+  priority,
+  urgency,
+  pai,
+  due_date,
+  LEFT(comment, 150) as latest_comment,
+  requester
+FROM mrm_todo
+WHERE status IN ('pending', 'in_progress', 'blocked')
+ORDER BY priority, urgency DESC, created_at;
+```
+
+**O QUE É mrm_todo:**
+- **Task tracker oficial:** Todas features/bugs/improvements sendo trabalhadas
+- **CPO transparency:** CPO vê progresso real-time sem perguntar PM
+- **BI future:** Preparado para dashboards (cycle time, throughput, etc)
+- **PM accountability:** Tracking completo do que PM está fazendo
+
+**WORKFLOW mrm_todo (SEMPRE SEMPRE SEMPRE):**
+
+**QUANDO INICIAR NOVA TASK:**
+```sql
+INSERT INTO mrm_todo (title, description, pai, status, priority, urgency, requester, comment)
+VALUES (
+  '[Task title from user request]',
+  '[Details: files to change, approach, etc]',
+  'pm',  -- ou cto/design/qa se delegar
+  'in_progress',  -- já começa in_progress se iniciar imediatamente
+  1,  -- 1=highest, 5=lowest
+  'high',  -- critical/high/medium/low
+  'user',  -- quem pediu
+  'Started: [initial progress note]'
+);
+```
+
+**QUANDO PROGREDIR EM TASK:**
+```sql
+UPDATE mrm_todo
+SET comment = 'Progress: [what was done, what is left]'
+WHERE id = '[task_id]';
+```
+
+**QUANDO COMPLETAR TASK:**
+```sql
+UPDATE mrm_todo
+SET
+  status = 'completed',
+  comment = 'Completed: [final result, how to test]'
+WHERE id = '[task_id]';
+-- trigger auto-seta completed_at
+```
+
+**QUANDO BLOQUEAR:**
+```sql
+UPDATE mrm_todo
+SET
+  status = 'blocked',
+  comment = 'Blocked: [reason, waiting for what/who]'
+WHERE id = '[task_id]';
+```
+
+---
+
+### **5. LER PRODUCTION METRICS (DB Produto)**
 
 **Métricas chave produto:**
 ```sql
