@@ -1,0 +1,78 @@
+# =====================================================
+# MRM - DEV MODE HOT RELOAD (FIXED VERSION)
+# CTO Pattern: Named volumes + persistent node_modules
+# =====================================================
+version: '3.8'
+
+services:
+  mrm-dev:
+    image: node:18-alpine
+    container_name: mrm-dev-hotreload
+    working_dir: /app
+
+    # ⚓ ANCHOR: VOLUME STRATEGY
+    # RAZÃO: Volume anônimo /app/node_modules causa VAZIO
+    # SOLUÇÃO: Named volume persistente + bind mount código
+    volumes:
+      # Source code (hot reload)
+      - ./:/app
+
+      # ⚓ CRITICAL: Named volume (não anonymous!)
+      # Persiste node_modules entre restarts
+      - mrm_dev_node_modules:/app/node_modules
+
+      # ⚓ Next.js build cache (acelera rebuild quando necessário)
+      - mrm_dev_nextcache:/app/.next
+
+    # ⚓ ANCHOR: NO TRAEFIK (dev local simples)
+    # RAZÃO: Dev não precisa SSL, evita conflito prod
+    ports:
+      - "3456:3000"  # Porta diferente prod
+
+    env_file:
+      - .env
+
+    environment:
+      - NODE_ENV=development
+      - NEXT_PUBLIC_APP_URL=http://localhost:3456
+
+      # ⚓ ANCHOR: POLLING TUNING
+      # RAZÃO: Docker Mac/Windows não detecta file changes nativamente
+      # SOLUÇÃO: Polling otimizado (300ms = sweet spot performance/responsiveness)
+      - CHOKIDAR_USEPOLLING=true
+      - WATCHPACK_POLLING=true
+      - CHOKIDAR_INTERVAL=300
+
+      # ⚓ Disable telemetry (dev mais rápido)
+      - NEXT_TELEMETRY_DISABLED=1
+
+    # ⚓ ANCHOR: ENTRYPOINT STRATEGY
+    # RAZÃO: npm install a cada restart = LENTO
+    # SOLUÇÃO: Verificar se node_modules existe antes instalar
+    command: >
+      sh -c "
+        if [ ! -d 'node_modules/@next' ]; then
+          echo '🔧 Installing dependencies (first run)...';
+          npm install;
+        else
+          echo '✅ Dependencies already installed, skipping...';
+        fi &&
+        echo '🚀 Starting Next.js dev server with hot reload...' &&
+        npm run dev
+      "
+
+    # ⚓ ANCHOR: HEALTH CHECK
+    # RAZÃO: Saber quando dev server está pronto
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 30s
+
+# ⚓ ANCHOR: NAMED VOLUMES (persiste entre restarts)
+volumes:
+  mrm_dev_node_modules:
+    driver: local
+  mrm_dev_nextcache:
+    driver: local
