@@ -29,18 +29,22 @@ export const onboardingSchema = z.object({
   otherSource: z.string().max(200, "Descrição deve ter no máximo 200 caracteres").optional(),
 
   // Step 3: Entregáveis
-  groupMeetingFrequency: z.enum(["none", "monthly", "bimonthly", "quarterly"], {
-    errorMap: () => ({ message: "Selecione uma frequência válida" }),
-  }),
+  // Encontros em Grupo
+  groupDeliverableName: z.string().max(200, "Nome do entregável deve ter no máximo 200 caracteres").optional(),
+  groupMeetingFormat: z.enum(["online", "presencial", "hybrid"]).optional(),
+  groupMeetingFrequency: z.enum(["none", "monthly", "bimonthly", "quarterly"]).optional(),
   groupMeetingDuration: z
     .number()
     .int("Duração deve ser um número inteiro")
     .min(0, "Duração deve ser maior ou igual a 0")
-    .max(480, "Duração máxima é 480 minutos (8 horas)"),
-  groupMeetingFormat: z.enum(["online", "presencial", "hybrid"]).optional(),
-  individualFrequency: z.enum(["weekly", "biweekly", "monthly", "flexible"], {
-    errorMap: () => ({ message: "Selecione uma frequência válida" }),
-  }),
+    .max(480, "Duração máxima é 480 minutos (8 horas)")
+    .optional(),
+  // Encontros Individuais 1-on-1
+  individualTotalInPeriod: z
+    .number()
+    .int("Total de sessões deve ser um número inteiro")
+    .min(1, "Deve ter pelo menos 1 sessão individual")
+    .max(1000, "Número máximo é 1000 sessões"),
   individualDuration: z
     .number()
     .int("Duração deve ser um número inteiro")
@@ -49,7 +53,8 @@ export const onboardingSchema = z.object({
   individualFormat: z.enum(["online", "presencial", "hybrid"], {
     errorMap: () => ({ message: "Selecione um formato válido" }),
   }),
-  asyncCommunication: z.array(z.string()).default([]),
+  // Forma de Comunicação
+  communicationMethods: z.array(z.string()).default([]),
   otherDeliverables: z.array(z.string()).default([]),
 
   // Step 4: Metodologia & Outcomes

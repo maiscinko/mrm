@@ -98,13 +98,17 @@ export async function POST(request: Request) {
       .insert({
         user_id: user.id,
         program_name: data.clubName || 'Programa Principal',
-        group_meeting_frequency: data.groupMeetingFrequency,
-        group_meeting_duration: data.groupMeetingDuration,
+        // Group meetings (optional)
+        group_deliverable_name: data.groupDeliverableName || null,
         group_meeting_format: data.groupMeetingFormat || null,
-        individual_frequency: data.individualFrequency,
+        group_meeting_frequency: data.groupMeetingFrequency || null,
+        group_meeting_duration: data.groupMeetingDuration || null,
+        // Individual 1-on-1 sessions (required)
+        individual_total_in_period: data.individualTotalInPeriod,
         individual_duration: data.individualDuration,
         individual_format: data.individualFormat,
-        async_communication: data.asyncCommunication || [],
+        // Communication methods
+        communication_methods: data.communicationMethods || [],
         other_deliverables: data.otherDeliverables || [],
       })
       .select()

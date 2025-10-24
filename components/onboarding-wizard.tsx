@@ -33,6 +33,7 @@ const steps = [
   { id: "club", title: "Seu Club MLS" },
   { id: "deliverables", title: "Entregáveis" },
   { id: "methodology", title: "Metodologia" },
+  { id: "documents", title: "Documentos" },
 ]
 
 interface FormData {
@@ -52,13 +53,17 @@ interface FormData {
   otherSource: string
 
   // Step 3: Entregáveis
+  // Encontros em Grupo
+  groupDeliverableName: string
+  groupMeetingFormat: string
   groupMeetingFrequency: string
   groupMeetingDuration: number
-  groupMeetingFormat: string
-  individualFrequency: string
+  // Encontros Individuais 1-on-1
+  individualTotalInPeriod: number
   individualDuration: number
   individualFormat: string
-  asyncCommunication: string[]
+  // Forma de Comunicação
+  communicationMethods: string[]
   otherDeliverables: string[]
 
   // Step 4: Metodologia
@@ -66,6 +71,10 @@ interface FormData {
   customFramework: string
   mentoringStyle: string
   successMetrics: string[]
+
+  // Step 5: Documents (optional)
+  profilePhoto?: File | null
+  additionalDocuments?: File[]
 }
 
 const fadeInUp = {
@@ -83,6 +92,7 @@ export function OnboardingWizard() {
   const router = useRouter()
   const [currentStep, setCurrentStep] = useState(0)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isSaved, setIsSaved] = useState(false)
   const [formData, setFormData] = useState<FormData>({
     // Step 1
     fullName: "",
@@ -100,13 +110,14 @@ export function OnboardingWizard() {
     otherSource: "",
 
     // Step 3
+    groupDeliverableName: "",
+    groupMeetingFormat: "online",
     groupMeetingFrequency: "none",
     groupMeetingDuration: 90,
-    groupMeetingFormat: "online",
-    individualFrequency: "monthly",
+    individualTotalInPeriod: 0,
     individualDuration: 60,
     individualFormat: "online",
-    asyncCommunication: [],
+    communicationMethods: [],
     otherDeliverables: [],
 
     // Step 4
@@ -143,14 +154,51 @@ export function OnboardingWizard() {
     }
   }
 
-  const handleSubmit = async () => {
+  const normalizeLinkedInUrl = (input: string): string => {
+    if (!input.trim()) return ""
+
+    // Already a full URL
+    if (input.startsWith("http://") || input.startsWith("https://")) {
+      return input
+    }
+
+    // Remove @ if present
+    const username = input.replace(/^@/, "")
+
+    // Build LinkedIn URL
+    return `https://linkedin.com/in/${username}`
+  }
+
+  const normalizeInstagramUrl = (input: string): string => {
+    if (!input.trim()) return ""
+
+    // Already a full URL
+    if (input.startsWith("http://") || input.startsWith("https://")) {
+      return input
+    }
+
+    // Remove @ if present
+    const username = input.replace(/^@/, "")
+
+    // Build Instagram URL
+    return `https://instagram.com/${username}`
+  }
+
+  const saveOnboardingData = async () => {
     setIsSubmitting(true)
 
     try {
+      // Normalize social media URLs before submitting
+      const normalizedData = {
+        ...formData,
+        linkedinUrl: normalizeLinkedInUrl(formData.linkedinUrl),
+        instagramUrl: normalizeInstagramUrl(formData.instagramUrl),
+      }
+
       const response = await fetch("/api/onboarding", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(normalizedData),
       })
 
       const result = await response.json()
@@ -159,14 +207,23 @@ export function OnboardingWizard() {
         throw new Error(result.error || "Erro ao salvar onboarding")
       }
 
-      toast.success("Onboarding concluído com sucesso!")
-      router.push("/dashboard")
-      router.refresh()
+      setIsSaved(true)
+      toast.success("Dados salvos com sucesso! Agora você pode enviar documentos complementares.")
+      setIsSubmitting(false)
+      // Advance to step 5 (documents)
+      nextStep()
     } catch (err) {
       console.error("[Onboarding Error]:", err)
       toast.error(err instanceof Error ? err.message : "Erro desconhecido")
       setIsSubmitting(false)
     }
+  }
+
+  const handleFinalSubmit = () => {
+    // Step 5: Upload documents (optional) and finish
+    toast.success("Onboarding concluído com sucesso!")
+    router.push("/dashboard")
+    router.refresh()
   }
 
   const isStepValid = () => {
@@ -176,9 +233,11 @@ export function OnboardingWizard() {
       case 1:
         return formData.clubCategory !== "" && formData.nicheArea.trim() !== ""
       case 2:
-        return formData.individualFrequency !== ""
+        return formData.individualTotalInPeriod > 0
       case 3:
         return formData.mentoringStyle !== ""
+      case 4:
+        return true // Documents are optional
       default:
         return true
     }
@@ -291,24 +350,24 @@ export function OnboardingWizard() {
                       </motion.div>
 
                       <motion.div variants={fadeInUp} className="space-y-2">
-                        <Label htmlFor="linkedinUrl">LinkedIn (URL completa)</Label>
+                        <Label htmlFor="linkedinUrl">LinkedIn</Label>
                         <Input
                           id="linkedinUrl"
-                          placeholder="https://linkedin.com/in/seu-perfil"
+                          placeholder="username ou @username"
                           value={formData.linkedinUrl}
                           onChange={(e) => updateFormData("linkedinUrl", e.target.value)}
                           className="transition-all duration-300 focus:ring-2 focus:ring-primary/20"
                         />
                         <p className="text-xs text-muted-foreground">
-                          Usaremos para entender seu tom de voz e estilo
+                          Usaremos para entender seu tom de voz e estilo (aceita username, @username ou URL completa)
                         </p>
                       </motion.div>
 
                       <motion.div variants={fadeInUp} className="space-y-2">
-                        <Label htmlFor="instagramUrl">Instagram (URL completa)</Label>
+                        <Label htmlFor="instagramUrl">Instagram</Label>
                         <Input
                           id="instagramUrl"
-                          placeholder="https://instagram.com/seu-perfil"
+                          placeholder="username ou @username"
                           value={formData.instagramUrl}
                           onChange={(e) => updateFormData("instagramUrl", e.target.value)}
                           className="transition-all duration-300 focus:ring-2 focus:ring-primary/20"
@@ -473,25 +532,68 @@ export function OnboardingWizard() {
                         <h4 className="font-semibold">Encontros em Grupo</h4>
 
                         <motion.div variants={fadeInUp} className="space-y-2">
-                          <Label>Frequência</Label>
-                          <Select
-                            value={formData.groupMeetingFrequency}
-                            onValueChange={(value) => updateFormData("groupMeetingFrequency", value)}
-                          >
-                            <SelectTrigger className="transition-all duration-300 focus:ring-2 focus:ring-primary/20">
-                              <SelectValue placeholder="Selecione" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="none">Não faço encontros em grupo</SelectItem>
-                              <SelectItem value="monthly">Mensal</SelectItem>
-                              <SelectItem value="bimonthly">Bimestral</SelectItem>
-                              <SelectItem value="quarterly">Trimestral</SelectItem>
-                            </SelectContent>
-                          </Select>
+                          <Label htmlFor="groupDeliverableName">Nome do entregável</Label>
+                          <Input
+                            id="groupDeliverableName"
+                            placeholder="Ex: Fórum Mensal, Encontro CEO, Reunião Club"
+                            value={formData.groupDeliverableName}
+                            onChange={(e) => updateFormData("groupDeliverableName", e.target.value)}
+                            className="transition-all duration-300 focus:ring-2 focus:ring-primary/20"
+                          />
+                          <p className="text-xs text-muted-foreground">
+                            Deixe vazio se não faz encontros em grupo
+                          </p>
                         </motion.div>
 
-                        {formData.groupMeetingFrequency !== "none" && (
+                        {formData.groupDeliverableName.trim() !== "" && (
                           <>
+                            <motion.div
+                              initial={{ opacity: 0, height: 0 }}
+                              animate={{ opacity: 1, height: "auto" }}
+                              variants={fadeInUp}
+                              className="space-y-2"
+                            >
+                              <Label>Formato</Label>
+                              <Select
+                                value={formData.groupMeetingFormat}
+                                onValueChange={(value) => updateFormData("groupMeetingFormat", value)}
+                              >
+                                <SelectTrigger className="transition-all duration-300 focus:ring-2 focus:ring-primary/20">
+                                  <SelectValue placeholder="Selecione" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="online">Online</SelectItem>
+                                  <SelectItem value="presencial">Presencial</SelectItem>
+                                  <SelectItem value="hybrid">Híbrido (online + presencial)</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </motion.div>
+
+                            <motion.div
+                              initial={{ opacity: 0, height: 0 }}
+                              animate={{ opacity: 1, height: "auto" }}
+                              variants={fadeInUp}
+                              className="space-y-2"
+                            >
+                              <Label>Frequência</Label>
+                              <Select
+                                value={formData.groupMeetingFrequency}
+                                onValueChange={(value) => updateFormData("groupMeetingFrequency", value)}
+                              >
+                                <SelectTrigger className="transition-all duration-300 focus:ring-2 focus:ring-primary/20">
+                                  <SelectValue placeholder="Selecione" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="monthly">Mensal</SelectItem>
+                                  <SelectItem value="bimonthly">Bimestral</SelectItem>
+                                  <SelectItem value="quarterly">Trimestral</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <p className="text-xs text-muted-foreground">
+                                Frequência total geral (online + presencial se híbrido)
+                              </p>
+                            </motion.div>
+
                             <motion.div
                               initial={{ opacity: 0, height: 0 }}
                               animate={{ opacity: 1, height: "auto" }}
@@ -510,52 +612,28 @@ export function OnboardingWizard() {
                                 className="transition-all duration-300 focus:ring-2 focus:ring-primary/20"
                               />
                             </motion.div>
-
-                            <motion.div
-                              initial={{ opacity: 0, height: 0 }}
-                              animate={{ opacity: 1, height: "auto" }}
-                              variants={fadeInUp}
-                              className="space-y-2"
-                            >
-                              <Label>Formato</Label>
-                              <Select
-                                value={formData.groupMeetingFormat}
-                                onValueChange={(value) => updateFormData("groupMeetingFormat", value)}
-                              >
-                                <SelectTrigger className="transition-all duration-300 focus:ring-2 focus:ring-primary/20">
-                                  <SelectValue placeholder="Selecione" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="online">Online</SelectItem>
-                                  <SelectItem value="presencial">Presencial</SelectItem>
-                                  <SelectItem value="hybrid">Híbrido</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </motion.div>
                           </>
                         )}
                       </div>
 
                       {/* Encontros Individuais 1-on-1 */}
                       <div className="border rounded-lg p-4 space-y-4">
-                        <h4 className="font-semibold">Encontros Individuais 1-on-1</h4>
+                        <h4 className="font-semibold">Encontros Individuais 1-on-1 *</h4>
 
                         <motion.div variants={fadeInUp} className="space-y-2">
-                          <Label>Frequência *</Label>
-                          <Select
-                            value={formData.individualFrequency}
-                            onValueChange={(value) => updateFormData("individualFrequency", value)}
-                          >
-                            <SelectTrigger className="transition-all duration-300 focus:ring-2 focus:ring-primary/20">
-                              <SelectValue placeholder="Selecione" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="weekly">Semanal</SelectItem>
-                              <SelectItem value="biweekly">Quinzenal</SelectItem>
-                              <SelectItem value="monthly">Mensal</SelectItem>
-                              <SelectItem value="flexible">Flexível</SelectItem>
-                            </SelectContent>
-                          </Select>
+                          <Label htmlFor="individualTotalInPeriod">
+                            Total de sessões no período de mentoria/contrato *
+                          </Label>
+                          <Input
+                            id="individualTotalInPeriod"
+                            type="number"
+                            placeholder="Ex: 12 sessões no ano, 6 sessões no semestre"
+                            value={formData.individualTotalInPeriod || ""}
+                            onChange={(e) =>
+                              updateFormData("individualTotalInPeriod", parseInt(e.target.value) || 0)
+                            }
+                            className="transition-all duration-300 focus:ring-2 focus:ring-primary/20"
+                          />
                         </motion.div>
 
                         <motion.div variants={fadeInUp} className="space-y-2">
@@ -590,15 +668,16 @@ export function OnboardingWizard() {
                         </motion.div>
                       </div>
 
-                      {/* Comunicação Assíncrona */}
+                      {/* Forma de Comunicação */}
                       <motion.div variants={fadeInUp} className="space-y-3">
-                        <Label>Comunicação Assíncrona</Label>
+                        <Label>Forma de Comunicação</Label>
                         <div className="grid grid-cols-1 gap-2">
                           {[
-                            { value: "none", label: "Não utilizo" },
-                            { value: "chat", label: "Chat/WhatsApp disponível" },
-                            { value: "async-videos", label: "Vídeos assíncronos" },
-                            { value: "platform", label: "Plataforma própria" },
+                            { value: "grupo-whatsapp", label: "Grupo WhatsApp/Telegram" },
+                            { value: "individual-whatsapp", label: "WhatsApp Individual" },
+                            { value: "comunidade-facebook", label: "Comunidade Facebook" },
+                            { value: "comunidade-discord", label: "Comunidade Discord" },
+                            { value: "plataforma-propria", label: "Plataforma própria" },
                           ].map((item, index) => (
                             <motion.div
                               key={item.value}
@@ -607,14 +686,14 @@ export function OnboardingWizard() {
                               whileTap={{ scale: 0.98 }}
                               initial={{ opacity: 0, y: 10 }}
                               animate={{ opacity: 1, y: 0, transition: { delay: 0.05 * index } }}
-                              onClick={() => toggleArrayItem("asyncCommunication", item.value)}
+                              onClick={() => toggleArrayItem("communicationMethods", item.value)}
                             >
                               <Checkbox
-                                id={`async-${item.value}`}
-                                checked={formData.asyncCommunication.includes(item.value)}
-                                onCheckedChange={() => toggleArrayItem("asyncCommunication", item.value)}
+                                id={`comm-${item.value}`}
+                                checked={formData.communicationMethods.includes(item.value)}
+                                onCheckedChange={() => toggleArrayItem("communicationMethods", item.value)}
                               />
-                              <Label htmlFor={`async-${item.value}`} className="cursor-pointer w-full">
+                              <Label htmlFor={`comm-${item.value}`} className="cursor-pointer w-full">
                                 {item.label}
                               </Label>
                             </motion.div>
@@ -781,6 +860,60 @@ export function OnboardingWizard() {
                     </CardContent>
                   </>
                 )}
+
+                {/* Step 5: Documents Upload */}
+                {currentStep === 4 && (
+                  <>
+                    <CardHeader>
+                      <CardTitle>Documentos Complementares (Opcional)</CardTitle>
+                      <CardDescription>
+                        Adicione foto de perfil e documentos complementares
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                      <motion.div variants={fadeInUp} className="space-y-2">
+                        <Label htmlFor="profilePhoto">Foto de Perfil</Label>
+                        <Input
+                          id="profilePhoto"
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0] || null
+                            updateFormData("profilePhoto", file)
+                          }}
+                          className="transition-all duration-300 focus:ring-2 focus:ring-primary/20"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Formatos aceitos: JPG, PNG, WEBP (máx. 5MB)
+                        </p>
+                      </motion.div>
+
+                      <motion.div variants={fadeInUp} className="space-y-2">
+                        <Label htmlFor="additionalDocs">Documentos Adicionais</Label>
+                        <Input
+                          id="additionalDocs"
+                          type="file"
+                          multiple
+                          accept=".pdf,.doc,.docx,.txt"
+                          onChange={(e) => {
+                            const files = e.target.files ? Array.from(e.target.files) : []
+                            updateFormData("additionalDocuments", files)
+                          }}
+                          className="transition-all duration-300 focus:ring-2 focus:ring-primary/20"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Frameworks, certificados, materiais de apoio (PDF, DOC, TXT - máx. 10MB cada)
+                        </p>
+                      </motion.div>
+
+                      <div className="rounded-lg border border-blue-200 bg-blue-50 dark:bg-blue-950 dark:border-blue-800 p-4">
+                        <p className="text-sm text-blue-800 dark:text-blue-200">
+                          💡 <strong>Dica:</strong> Você pode pular esta etapa e adicionar documentos depois no seu perfil.
+                        </p>
+                      </div>
+                    </CardContent>
+                  </>
+                )}
               </motion.div>
             </AnimatePresence>
 
@@ -799,8 +932,19 @@ export function OnboardingWizard() {
               <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                 <Button
                   type="button"
-                  onClick={currentStep === steps.length - 1 ? handleSubmit : nextStep}
-                  disabled={!isStepValid() || isSubmitting}
+                  onClick={() => {
+                    if (currentStep === 3) {
+                      // Step 4 (Metodologia): Save data and advance to documents
+                      saveOnboardingData()
+                    } else if (currentStep === 4) {
+                      // Step 5 (Documents): Final submit
+                      handleFinalSubmit()
+                    } else {
+                      // Steps 1-3: Just advance
+                      nextStep()
+                    }
+                  }}
+                  disabled={(!isStepValid() || isSubmitting) && currentStep !== 4}
                   className="flex items-center gap-1 transition-all duration-300 rounded-2xl"
                 >
                   {isSubmitting ? (
@@ -809,8 +953,8 @@ export function OnboardingWizard() {
                     </>
                   ) : (
                     <>
-                      {currentStep === steps.length - 1 ? "Concluir" : "Próximo"}
-                      {currentStep === steps.length - 1 ? (
+                      {currentStep === 3 ? "Salvar e Continuar" : currentStep === 4 ? "Concluir" : "Próximo"}
+                      {currentStep === 4 ? (
                         <Check className="h-4 w-4" />
                       ) : (
                         <ChevronRight className="h-4 w-4" />
