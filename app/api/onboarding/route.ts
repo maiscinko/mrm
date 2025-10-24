@@ -92,12 +92,12 @@ export async function POST(request: Request) {
 
     console.log('[Onboarding] Profile created:', profileData)
 
-    // Step 2: Create mentoring program structure
+    // Step 2: Create or update mentoring program structure
     const { data: programData, error: programError } = await supabase
       .from('mentoring_programs')
-      .insert({
+      .upsert({
         user_id: user.id,
-        program_name: data.clubName || 'Programa Principal',
+        program_name: data.clubName || 'Main Program',
         // Group meetings (optional)
         group_deliverable_name: data.groupDeliverableName || null,
         group_meeting_format: data.groupMeetingFormat || null,
