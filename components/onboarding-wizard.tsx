@@ -29,11 +29,11 @@ import { cn } from "@/lib/utils"
 import { useRouter } from "next/navigation"
 
 const steps = [
-  { id: "identification", title: "Identificação" },
-  { id: "club", title: "Seu Club MLS" },
-  { id: "deliverables", title: "Entregáveis" },
-  { id: "methodology", title: "Metodologia" },
-  { id: "documents", title: "Documentos" },
+  { id: "identification", title: "Identification" },
+  { id: "club", title: "Your MLS Club" },
+  { id: "deliverables", title: "Deliverables" },
+  { id: "methodology", title: "Methodology" },
+  { id: "documents", title: "Documents" },
 ]
 
 interface FormData {
@@ -208,20 +208,20 @@ export function OnboardingWizard() {
       }
 
       setIsSaved(true)
-      toast.success("Dados salvos com sucesso! Agora você pode enviar documentos complementares.")
+      toast.success("Data saved successfully! Now you can upload complementary documents.")
       setIsSubmitting(false)
       // Advance to step 5 (documents)
       nextStep()
     } catch (err) {
       console.error("[Onboarding Error]:", err)
-      toast.error(err instanceof Error ? err.message : "Erro desconhecido")
+      toast.error(err instanceof Error ? err.message : "Unknown error")
       setIsSubmitting(false)
     }
   }
 
   const handleFinalSubmit = () => {
     // Step 5: Upload documents (optional) and finish
-    toast.success("Onboarding concluído com sucesso!")
+    toast.success("Onboarding completed successfully!")
     router.push("/dashboard")
     router.refresh()
   }
@@ -316,21 +316,21 @@ export function OnboardingWizard() {
                 exit="exit"
                 variants={contentVariants}
               >
-                {/* Step 1: Identificação do Mentor */}
+                {/* Step 1: Mentor Identification */}
                 {currentStep === 0 && (
                   <>
                     <CardHeader>
-                      <CardTitle>Identificação do Mentor</CardTitle>
+                      <CardTitle>Mentor Identification</CardTitle>
                       <CardDescription>
-                        Seus dados principais e redes sociais
+                        Your main information and social media
                       </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <motion.div variants={fadeInUp} className="space-y-2">
-                        <Label htmlFor="fullName">Nome Completo *</Label>
+                        <Label htmlFor="fullName">Full Name *</Label>
                         <Input
                           id="fullName"
-                          placeholder="João Silva"
+                          placeholder="John Silva"
                           value={formData.fullName}
                           onChange={(e) => updateFormData("fullName", e.target.value)}
                           className="transition-all duration-300 focus:ring-2 focus:ring-primary/20"
@@ -342,7 +342,7 @@ export function OnboardingWizard() {
                         <Input
                           id="email"
                           type="email"
-                          placeholder="joao@exemplo.com"
+                          placeholder="john@example.com"
                           value={formData.email}
                           onChange={(e) => updateFormData("email", e.target.value)}
                           className="transition-all duration-300 focus:ring-2 focus:ring-primary/20"
@@ -353,13 +353,13 @@ export function OnboardingWizard() {
                         <Label htmlFor="linkedinUrl">LinkedIn</Label>
                         <Input
                           id="linkedinUrl"
-                          placeholder="username ou @username"
+                          placeholder="username or @username"
                           value={formData.linkedinUrl}
                           onChange={(e) => updateFormData("linkedinUrl", e.target.value)}
                           className="transition-all duration-300 focus:ring-2 focus:ring-primary/20"
                         />
                         <p className="text-xs text-muted-foreground">
-                          Usaremos para entender seu tom de voz e estilo (aceita username, @username ou URL completa)
+                          We'll use this to understand your voice and style (accepts username, @username or full URL)
                         </p>
                       </motion.div>
 
@@ -367,7 +367,7 @@ export function OnboardingWizard() {
                         <Label htmlFor="instagramUrl">Instagram</Label>
                         <Input
                           id="instagramUrl"
-                          placeholder="username ou @username"
+                          placeholder="username or @username"
                           value={formData.instagramUrl}
                           onChange={(e) => updateFormData("instagramUrl", e.target.value)}
                           className="transition-all duration-300 focus:ring-2 focus:ring-primary/20"
@@ -375,10 +375,10 @@ export function OnboardingWizard() {
                       </motion.div>
 
                       <motion.div variants={fadeInUp} className="space-y-2">
-                        <Label htmlFor="bio">Bio / Trajetória</Label>
+                        <Label htmlFor="bio">Bio / Background</Label>
                         <Textarea
                           id="bio"
-                          placeholder="Conte um pouco sobre sua experiência como mentor..."
+                          placeholder="Tell us about your experience as a mentor..."
                           value={formData.bio}
                           onChange={(e) => updateFormData("bio", e.target.value)}
                           rows={4}
@@ -389,21 +389,21 @@ export function OnboardingWizard() {
                   </>
                 )}
 
-                {/* Step 2: Seu Club & Categoria MLS */}
+                {/* Step 2: Your MLS Club & Category */}
                 {currentStep === 1 && (
                   <>
                     <CardHeader>
-                      <CardTitle>Seu Club & Categoria MLS</CardTitle>
+                      <CardTitle>Your MLS Club & Category</CardTitle>
                       <CardDescription>
-                        Informações sobre seu club e mentorados
+                        Information about your club and mentees
                       </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <motion.div variants={fadeInUp} className="space-y-2">
-                        <Label htmlFor="clubName">Nome do seu Club MLS</Label>
+                        <Label htmlFor="clubName">Your MLS Club Name</Label>
                         <Input
                           id="clubName"
-                          placeholder="Ex: Brain, Prosperus, Mentalidade Master"
+                          placeholder="E.g.: Brain, Prosperus, Mindset Master"
                           value={formData.clubName}
                           onChange={(e) => updateFormData("clubName", e.target.value)}
                           className="transition-all duration-300 focus:ring-2 focus:ring-primary/20"
@@ -411,7 +411,7 @@ export function OnboardingWizard() {
                       </motion.div>
 
                       <motion.div variants={fadeInUp} className="space-y-3">
-                        <Label>Categoria do Club *</Label>
+                        <Label>Club Category *</Label>
                         <RadioGroup
                           value={formData.clubCategory}
                           onValueChange={(value) => updateFormData("clubCategory", value)}
@@ -443,11 +443,11 @@ export function OnboardingWizard() {
                       </motion.div>
 
                       <motion.div variants={fadeInUp} className="space-y-2">
-                        <Label htmlFor="activeMentees">Número de mentorados ativos atualmente</Label>
+                        <Label htmlFor="activeMentees">Number of currently active mentees</Label>
                         <Input
                           id="activeMentees"
                           type="number"
-                          placeholder="Ex: 5, 10, 15"
+                          placeholder="E.g.: 5, 10, 15"
                           value={formData.activeMentees || ""}
                           onChange={(e) => updateFormData("activeMentees", parseInt(e.target.value) || 0)}
                           className="transition-all duration-300 focus:ring-2 focus:ring-primary/20"
@@ -455,10 +455,10 @@ export function OnboardingWizard() {
                       </motion.div>
 
                       <motion.div variants={fadeInUp} className="space-y-2">
-                        <Label htmlFor="nicheArea">Nicho de atuação *</Label>
+                        <Label htmlFor="nicheArea">Niche Area *</Label>
                         <Input
                           id="nicheArea"
-                          placeholder="Ex: Tech CEOs, E-commerce Founders, Sales Leaders"
+                          placeholder="E.g.: Tech CEOs, E-commerce Founders, Sales Leaders"
                           value={formData.nicheArea}
                           onChange={(e) => updateFormData("nicheArea", e.target.value)}
                           className="transition-all duration-300 focus:ring-2 focus:ring-primary/20"
@@ -466,18 +466,18 @@ export function OnboardingWizard() {
                       </motion.div>
 
                       <motion.div variants={fadeInUp} className="space-y-3">
-                        <Label>Principal fonte de entrada de mentorados</Label>
+                        <Label>Main source of mentee inflow</Label>
                         <RadioGroup
                           value={formData.mainSource}
                           onValueChange={(value) => updateFormData("mainSource", value)}
                           className="space-y-2"
                         >
                           {[
-                            { value: "mls-referral", label: "Indicação outros mentores MLS" },
-                            { value: "personal-network", label: "Network pessoal" },
-                            { value: "social-media", label: "LinkedIn / Redes sociais" },
-                            { value: "mls-events", label: "Eventos MLS" },
-                            { value: "other", label: "Outro" },
+                            { value: "mls-referral", label: "Referral from other MLS mentors" },
+                            { value: "personal-network", label: "Personal network" },
+                            { value: "social-media", label: "LinkedIn / Social media" },
+                            { value: "mls-events", label: "MLS events" },
+                            { value: "other", label: "Other" },
                           ].map((source, index) => (
                             <motion.div
                               key={source.value}
@@ -503,10 +503,10 @@ export function OnboardingWizard() {
                           exit={{ opacity: 0, height: 0 }}
                           className="space-y-2"
                         >
-                          <Label htmlFor="otherSource">Especifique:</Label>
+                          <Label htmlFor="otherSource">Please specify:</Label>
                           <Input
                             id="otherSource"
-                            placeholder="Descreva a fonte"
+                            placeholder="Describe the source"
                             value={formData.otherSource}
                             onChange={(e) => updateFormData("otherSource", e.target.value)}
                             className="transition-all duration-300 focus:ring-2 focus:ring-primary/20"
@@ -517,31 +517,31 @@ export function OnboardingWizard() {
                   </>
                 )}
 
-                {/* Step 3: Estrutura de Entregáveis */}
+                {/* Step 3: Deliverables Structure */}
                 {currentStep === 2 && (
                   <>
                     <CardHeader>
-                      <CardTitle>Estrutura de Entregáveis</CardTitle>
+                      <CardTitle>Deliverables Structure</CardTitle>
                       <CardDescription>
-                        Como você estrutura sessões e encontros
+                        How you structure sessions and meetings
                       </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-6">
-                      {/* Encontros em Grupo */}
+                      {/* Group Meetings */}
                       <div className="border rounded-lg p-4 space-y-4">
-                        <h4 className="font-semibold">Encontros em Grupo</h4>
+                        <h4 className="font-semibold">Group Meetings</h4>
 
                         <motion.div variants={fadeInUp} className="space-y-2">
-                          <Label htmlFor="groupDeliverableName">Nome do entregável</Label>
+                          <Label htmlFor="groupDeliverableName">Deliverable name</Label>
                           <Input
                             id="groupDeliverableName"
-                            placeholder="Ex: Fórum Mensal, Encontro CEO, Reunião Club"
+                            placeholder="E.g.: Monthly Forum, CEO Meeting, Club Session"
                             value={formData.groupDeliverableName}
                             onChange={(e) => updateFormData("groupDeliverableName", e.target.value)}
                             className="transition-all duration-300 focus:ring-2 focus:ring-primary/20"
                           />
                           <p className="text-xs text-muted-foreground">
-                            Deixe vazio se não faz encontros em grupo
+                            Leave empty if you don't do group meetings
                           </p>
                         </motion.div>
 
@@ -553,18 +553,18 @@ export function OnboardingWizard() {
                               variants={fadeInUp}
                               className="space-y-2"
                             >
-                              <Label>Formato</Label>
+                              <Label>Format</Label>
                               <Select
                                 value={formData.groupMeetingFormat}
                                 onValueChange={(value) => updateFormData("groupMeetingFormat", value)}
                               >
                                 <SelectTrigger className="transition-all duration-300 focus:ring-2 focus:ring-primary/20">
-                                  <SelectValue placeholder="Selecione" />
+                                  <SelectValue placeholder="Select" />
                                 </SelectTrigger>
                                 <SelectContent>
                                   <SelectItem value="online">Online</SelectItem>
-                                  <SelectItem value="presencial">Presencial</SelectItem>
-                                  <SelectItem value="hybrid">Híbrido (online + presencial)</SelectItem>
+                                  <SelectItem value="presencial">In-person</SelectItem>
+                                  <SelectItem value="hybrid">Hybrid (online + in-person)</SelectItem>
                                 </SelectContent>
                               </Select>
                             </motion.div>
@@ -575,22 +575,22 @@ export function OnboardingWizard() {
                               variants={fadeInUp}
                               className="space-y-2"
                             >
-                              <Label>Frequência</Label>
+                              <Label>Frequency</Label>
                               <Select
                                 value={formData.groupMeetingFrequency}
                                 onValueChange={(value) => updateFormData("groupMeetingFrequency", value)}
                               >
                                 <SelectTrigger className="transition-all duration-300 focus:ring-2 focus:ring-primary/20">
-                                  <SelectValue placeholder="Selecione" />
+                                  <SelectValue placeholder="Select" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  <SelectItem value="monthly">Mensal</SelectItem>
-                                  <SelectItem value="bimonthly">Bimestral</SelectItem>
-                                  <SelectItem value="quarterly">Trimestral</SelectItem>
+                                  <SelectItem value="monthly">Monthly</SelectItem>
+                                  <SelectItem value="bimonthly">Bimonthly</SelectItem>
+                                  <SelectItem value="quarterly">Quarterly</SelectItem>
                                 </SelectContent>
                               </Select>
                               <p className="text-xs text-muted-foreground">
-                                Frequência total geral (online + presencial se híbrido)
+                                Total frequency (online + in-person if hybrid)
                               </p>
                             </motion.div>
 
@@ -600,7 +600,7 @@ export function OnboardingWizard() {
                               variants={fadeInUp}
                               className="space-y-2"
                             >
-                              <Label htmlFor="groupDuration">Duração média (minutos)</Label>
+                              <Label htmlFor="groupDuration">Average duration (minutes)</Label>
                               <Input
                                 id="groupDuration"
                                 type="number"
@@ -616,18 +616,18 @@ export function OnboardingWizard() {
                         )}
                       </div>
 
-                      {/* Encontros Individuais 1-on-1 */}
+                      {/* Individual 1-on-1 Meetings */}
                       <div className="border rounded-lg p-4 space-y-4">
-                        <h4 className="font-semibold">Encontros Individuais 1-on-1 *</h4>
+                        <h4 className="font-semibold">Individual 1-on-1 Meetings *</h4>
 
                         <motion.div variants={fadeInUp} className="space-y-2">
                           <Label htmlFor="individualTotalInPeriod">
-                            Total de sessões no período de mentoria/contrato *
+                            Total sessions in mentoring period/contract *
                           </Label>
                           <Input
                             id="individualTotalInPeriod"
                             type="number"
-                            placeholder="Ex: 12 sessões no ano, 6 sessões no semestre"
+                            placeholder="E.g.: 12 sessions per year, 6 sessions per semester"
                             value={formData.individualTotalInPeriod || ""}
                             onChange={(e) =>
                               updateFormData("individualTotalInPeriod", parseInt(e.target.value) || 0)
@@ -637,7 +637,7 @@ export function OnboardingWizard() {
                         </motion.div>
 
                         <motion.div variants={fadeInUp} className="space-y-2">
-                          <Label htmlFor="individualDuration">Duração média (minutos)</Label>
+                          <Label htmlFor="individualDuration">Average duration (minutes)</Label>
                           <Input
                             id="individualDuration"
                             type="number"
@@ -651,33 +651,33 @@ export function OnboardingWizard() {
                         </motion.div>
 
                         <motion.div variants={fadeInUp} className="space-y-2">
-                          <Label>Formato</Label>
+                          <Label>Format</Label>
                           <Select
                             value={formData.individualFormat}
                             onValueChange={(value) => updateFormData("individualFormat", value)}
                           >
                             <SelectTrigger className="transition-all duration-300 focus:ring-2 focus:ring-primary/20">
-                              <SelectValue placeholder="Selecione" />
+                              <SelectValue placeholder="Select" />
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="online">Online</SelectItem>
-                              <SelectItem value="presencial">Presencial</SelectItem>
-                              <SelectItem value="hybrid">Híbrido</SelectItem>
+                              <SelectItem value="presencial">In-person</SelectItem>
+                              <SelectItem value="hybrid">Hybrid</SelectItem>
                             </SelectContent>
                           </Select>
                         </motion.div>
                       </div>
 
-                      {/* Forma de Comunicação */}
+                      {/* Communication Methods */}
                       <motion.div variants={fadeInUp} className="space-y-3">
-                        <Label>Forma de Comunicação</Label>
+                        <Label>Communication Methods</Label>
                         <div className="grid grid-cols-1 gap-2">
                           {[
-                            { value: "grupo-whatsapp", label: "Grupo WhatsApp/Telegram" },
-                            { value: "individual-whatsapp", label: "WhatsApp Individual" },
-                            { value: "comunidade-facebook", label: "Comunidade Facebook" },
-                            { value: "comunidade-discord", label: "Comunidade Discord" },
-                            { value: "plataforma-propria", label: "Plataforma própria" },
+                            { value: "grupo-whatsapp", label: "WhatsApp/Telegram Group" },
+                            { value: "individual-whatsapp", label: "Individual WhatsApp" },
+                            { value: "comunidade-facebook", label: "Facebook Community" },
+                            { value: "comunidade-discord", label: "Discord Community" },
+                            { value: "plataforma-propria", label: "Own Platform" },
                           ].map((item, index) => (
                             <motion.div
                               key={item.value}
@@ -701,16 +701,16 @@ export function OnboardingWizard() {
                         </div>
                       </motion.div>
 
-                      {/* Outros Entregáveis */}
+                      {/* Other Deliverables */}
                       <motion.div variants={fadeInUp} className="space-y-3">
-                        <Label>Outros Entregáveis</Label>
+                        <Label>Other Deliverables</Label>
                         <div className="grid grid-cols-1 gap-2">
                           {[
-                            { value: "action-plan", label: "Plano de Ação trimestral" },
-                            { value: "assessments", label: "Assessments periódicos" },
-                            { value: "exclusive-content", label: "Material exclusivo (ebooks, frameworks)" },
-                            { value: "community", label: "Acesso comunidade/network" },
-                            { value: "exclusive-events", label: "Eventos exclusivos" },
+                            { value: "action-plan", label: "Quarterly Action Plan" },
+                            { value: "assessments", label: "Periodic Assessments" },
+                            { value: "exclusive-content", label: "Exclusive Material (ebooks, frameworks)" },
+                            { value: "community", label: "Community/Network Access" },
+                            { value: "exclusive-events", label: "Exclusive Events" },
                           ].map((item, index) => (
                             <motion.div
                               key={item.value}
@@ -737,18 +737,18 @@ export function OnboardingWizard() {
                   </>
                 )}
 
-                {/* Step 4: Metodologia & Outcomes */}
+                {/* Step 4: Methodology & Outcomes */}
                 {currentStep === 3 && (
                   <>
                     <CardHeader>
-                      <CardTitle>Metodologia & Outcomes</CardTitle>
+                      <CardTitle>Methodology & Outcomes</CardTitle>
                       <CardDescription>
-                        Como você trabalha e mede sucesso
+                        How you work and measure success
                       </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <motion.div variants={fadeInUp} className="space-y-3">
-                        <Label>Framework principal</Label>
+                        <Label>Main framework</Label>
                         <RadioGroup
                           value={formData.framework}
                           onValueChange={(value) => updateFormData("framework", value)}
@@ -758,7 +758,7 @@ export function OnboardingWizard() {
                             { value: "grow", label: "GROW (Goal, Reality, Options, Will)" },
                             { value: "okr", label: "OKRs (Objectives & Key Results)" },
                             { value: "smart", label: "SMART Goals" },
-                            { value: "custom", label: "Metodologia Própria" },
+                            { value: "custom", label: "Custom Methodology" },
                           ].map((fw, index) => (
                             <motion.div
                               key={fw.value}
@@ -784,10 +784,10 @@ export function OnboardingWizard() {
                           exit={{ opacity: 0, height: 0 }}
                           className="space-y-2"
                         >
-                          <Label htmlFor="customFramework">Descreva sua metodologia:</Label>
+                          <Label htmlFor="customFramework">Describe your methodology:</Label>
                           <Textarea
                             id="customFramework"
-                            placeholder="Ex: Uso uma combinação de design thinking + accountability mensal..."
+                            placeholder="E.g.: I use a combination of design thinking + monthly accountability..."
                             value={formData.customFramework}
                             onChange={(e) => updateFormData("customFramework", e.target.value)}
                             rows={3}
@@ -797,17 +797,17 @@ export function OnboardingWizard() {
                       )}
 
                       <motion.div variants={fadeInUp} className="space-y-3">
-                        <Label>Estilo de mentoria *</Label>
+                        <Label>Mentoring style *</Label>
                         <RadioGroup
                           value={formData.mentoringStyle}
                           onValueChange={(value) => updateFormData("mentoringStyle", value)}
                           className="space-y-2"
                         >
                           {[
-                            { value: "directive", label: "Diretivo (mais orientação direta)" },
-                            { value: "coaching", label: "Coaching (perguntas provocativas)" },
-                            { value: "facilitator", label: "Facilitador (mentorado lidera)" },
-                            { value: "hybrid", label: "Híbrido (equilibrado)" },
+                            { value: "directive", label: "Directive (more direct guidance)" },
+                            { value: "coaching", label: "Coaching (provocative questions)" },
+                            { value: "facilitator", label: "Facilitator (mentee leads)" },
+                            { value: "hybrid", label: "Hybrid (balanced)" },
                           ].map((style, index) => (
                             <motion.div
                               key={style.value}
@@ -827,14 +827,14 @@ export function OnboardingWizard() {
                       </motion.div>
 
                       <motion.div variants={fadeInUp} className="space-y-3">
-                        <Label>Como você mede sucesso do mentorado?</Label>
+                        <Label>How do you measure mentee success?</Label>
                         <div className="grid grid-cols-1 gap-2">
                           {[
-                            { value: "revenue-growth", label: "Crescimento de revenue" },
-                            { value: "goals-achievement", label: "Atingimento de metas definidas" },
-                            { value: "leadership-dev", label: "Desenvolvimento de liderança" },
-                            { value: "nps", label: "NPS / Satisfação" },
-                            { value: "renewal", label: "Renovação de contrato" },
+                            { value: "revenue-growth", label: "Revenue Growth" },
+                            { value: "goals-achievement", label: "Achievement of Defined Goals" },
+                            { value: "leadership-dev", label: "Leadership Development" },
+                            { value: "nps", label: "NPS / Satisfaction" },
+                            { value: "renewal", label: "Contract Renewal" },
                           ].map((metric, index) => (
                             <motion.div
                               key={metric.value}
@@ -865,14 +865,14 @@ export function OnboardingWizard() {
                 {currentStep === 4 && (
                   <>
                     <CardHeader>
-                      <CardTitle>Documentos Complementares (Opcional)</CardTitle>
+                      <CardTitle>Complementary Documents (Optional)</CardTitle>
                       <CardDescription>
-                        Adicione foto de perfil e documentos complementares
+                        Add profile photo and complementary documents
                       </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-6">
                       <motion.div variants={fadeInUp} className="space-y-2">
-                        <Label htmlFor="profilePhoto">Foto de Perfil</Label>
+                        <Label htmlFor="profilePhoto">Profile Photo</Label>
                         <Input
                           id="profilePhoto"
                           type="file"
@@ -884,12 +884,12 @@ export function OnboardingWizard() {
                           className="transition-all duration-300 focus:ring-2 focus:ring-primary/20"
                         />
                         <p className="text-xs text-muted-foreground">
-                          Formatos aceitos: JPG, PNG, WEBP (máx. 5MB)
+                          Accepted formats: JPG, PNG, WEBP (max. 5MB)
                         </p>
                       </motion.div>
 
                       <motion.div variants={fadeInUp} className="space-y-2">
-                        <Label htmlFor="additionalDocs">Documentos Adicionais</Label>
+                        <Label htmlFor="additionalDocs">Additional Documents</Label>
                         <Input
                           id="additionalDocs"
                           type="file"
@@ -902,13 +902,13 @@ export function OnboardingWizard() {
                           className="transition-all duration-300 focus:ring-2 focus:ring-primary/20"
                         />
                         <p className="text-xs text-muted-foreground">
-                          Frameworks, certificados, materiais de apoio (PDF, DOC, TXT - máx. 10MB cada)
+                          Frameworks, certificates, support materials (PDF, DOC, TXT - max. 10MB each)
                         </p>
                       </motion.div>
 
                       <div className="rounded-lg border border-blue-200 bg-blue-50 dark:bg-blue-950 dark:border-blue-800 p-4">
                         <p className="text-sm text-blue-800 dark:text-blue-200">
-                          💡 <strong>Dica:</strong> Você pode pular esta etapa e adicionar documentos depois no seu perfil.
+                          💡 <strong>Tip:</strong> You can skip this step and add documents later in your profile.
                         </p>
                       </div>
                     </CardContent>
@@ -926,7 +926,7 @@ export function OnboardingWizard() {
                   disabled={currentStep === 0}
                   className="flex items-center gap-1 transition-all duration-300 rounded-2xl"
                 >
-                  <ChevronLeft className="h-4 w-4" /> Voltar
+                  <ChevronLeft className="h-4 w-4" /> Back
                 </Button>
               </motion.div>
               <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
@@ -934,7 +934,7 @@ export function OnboardingWizard() {
                   type="button"
                   onClick={() => {
                     if (currentStep === 3) {
-                      // Step 4 (Metodologia): Save data and advance to documents
+                      // Step 4 (Methodology): Save data and advance to documents
                       saveOnboardingData()
                     } else if (currentStep === 4) {
                       // Step 5 (Documents): Final submit
@@ -949,11 +949,11 @@ export function OnboardingWizard() {
                 >
                   {isSubmitting ? (
                     <>
-                      <Loader2 className="h-4 w-4 animate-spin" /> Salvando...
+                      <Loader2 className="h-4 w-4 animate-spin" /> Saving...
                     </>
                   ) : (
                     <>
-                      {currentStep === 3 ? "Salvar e Continuar" : currentStep === 4 ? "Concluir" : "Próximo"}
+                      {currentStep === 3 ? "Save & Continue" : currentStep === 4 ? "Finish" : "Next"}
                       {currentStep === 4 ? (
                         <Check className="h-4 w-4" />
                       ) : (
@@ -975,7 +975,7 @@ export function OnboardingWizard() {
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5, delay: 0.4 }}
       >
-        Etapa {currentStep + 1} de {steps.length}: {steps[currentStep].title}
+        Step {currentStep + 1} of {steps.length}: {steps[currentStep].title}
       </motion.div>
     </div>
   )
