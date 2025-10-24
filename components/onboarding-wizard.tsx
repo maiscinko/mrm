@@ -49,7 +49,7 @@ interface FormData {
   clubCategory: string // bronze, silver, gold, platinum, diamond
   activeMentees: number
   nicheArea: string
-  mainSource: string
+  mainSources: string[] // Changed from mainSource to mainSources (array)
   otherSource: string
 
   // Step 3: Entregáveis
@@ -64,7 +64,9 @@ interface FormData {
   individualFormat: string
   // Forma de Comunicação
   communicationMethods: string[]
+  customCommunicationMethod: string
   otherDeliverables: string[]
+  customOtherDeliverable: string
 
   // Step 4: Metodologia
   framework: string
@@ -106,7 +108,7 @@ export function OnboardingWizard() {
     clubCategory: "",
     activeMentees: 0,
     nicheArea: "",
-    mainSource: "",
+    mainSources: [],
     otherSource: "",
 
     // Step 3
@@ -118,7 +120,9 @@ export function OnboardingWizard() {
     individualDuration: 60,
     individualFormat: "online",
     communicationMethods: [],
+    customCommunicationMethod: "",
     otherDeliverables: [],
+    customOtherDeliverable: "",
 
     // Step 4
     framework: "",
@@ -195,16 +199,23 @@ export function OnboardingWizard() {
         instagramUrl: normalizeInstagramUrl(formData.instagramUrl),
       }
 
+      console.log("[Onboarding Save] Sending data to API:", JSON.stringify(normalizedData, null, 2))
+
       const response = await fetch("/api/onboarding", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(normalizedData),
       })
 
+      console.log("[Onboarding Save] Response status:", response.status)
+
       const result = await response.json()
+      console.log("[Onboarding Save] Response body:", JSON.stringify(result, null, 2))
 
       if (!response.ok) {
-        throw new Error(result.error || "Erro ao salvar onboarding")
+        const errorMsg = result.details || result.error || "Failed to save onboarding"
+        console.error("[Onboarding Save] Error:", errorMsg)
+        throw new Error(errorMsg)
       }
 
       setIsSaved(true)
@@ -214,7 +225,7 @@ export function OnboardingWizard() {
       nextStep()
     } catch (err) {
       console.error("[Onboarding Error]:", err)
-      toast.error(err instanceof Error ? err.message : "Unknown error")
+      toast.error(err instanceof Error ? err.message : "Unknown error saving data")
       setIsSubmitting(false)
     }
   }
@@ -226,21 +237,43 @@ export function OnboardingWizard() {
     router.refresh()
   }
 
-  const isStepValid = () => {
+  const getStepValidationErrors = (): string[] => {
+    const errors: string[] = []
+
     switch (currentStep) {
       case 0:
-        return formData.fullName.trim() !== "" && formData.email.trim() !== ""
+        if (formData.fullName.trim() === "") errors.push("Full Name is required")
+        if (formData.email.trim() === "") errors.push("Email is required")
+        break
       case 1:
-        return formData.clubCategory !== "" && formData.nicheArea.trim() !== ""
+        if (formData.clubCategory === "") errors.push("MLS Category is required")
+        if (formData.nicheArea.trim() === "") errors.push("Niche Area is required")
+        break
       case 2:
-        return formData.individualTotalInPeriod > 0
+        if (formData.individualTotalInPeriod <= 0) errors.push("Individual sessions total must be greater than 0")
+        break
       case 3:
-        return formData.mentoringStyle !== ""
+        if (formData.mentoringStyle === "") errors.push("Mentoring Style is required")
+        break
       case 4:
-        return true // Documents are optional
-      default:
-        return true
+        // Documents are optional
+        break
     }
+
+    return errors
+  }
+
+  const isStepValid = () => {
+    return getStepValidationErrors().length === 0
+  }
+
+  const handleNextStep = () => {
+    const errors = getStepValidationErrors()
+    if (errors.length > 0) {
+      toast.error(`Please fix the following errors:\n${errors.join("\n")}`)
+      return
+    }
+    nextStep()
   }
 
   return (
@@ -466,17 +499,16 @@ export function OnboardingWizard() {
                       </motion.div>
 
                       <motion.div variants={fadeInUp} className="space-y-3">
-                        <Label>Main source of mentee inflow</Label>
-                        <RadioGroup
-                          value={formData.mainSource}
-                          onValueChange={(value) => updateFormData("mainSource", value)}
-                          className="space-y-2"
-                        >
+                        <Label>Main sources of mentee inflow (select all that apply)</Label>
+                        <div className="grid grid-cols-1 gap-2">
                           {[
                             { value: "mls-referral", label: "Referral from other MLS mentors" },
                             { value: "personal-network", label: "Personal network" },
                             { value: "social-media", label: "LinkedIn / Social media" },
                             { value: "mls-events", label: "MLS events" },
+                            { value: "prospecting", label: "Active prospecting" },
+                            { value: "ads", label: "Paid ads (Google, LinkedIn, etc.)" },
+                            { value: "other-products", label: "Other products/services I offer" },
                             { value: "other", label: "Other" },
                           ].map((source, index) => (
                             <motion.div
@@ -486,17 +518,22 @@ export function OnboardingWizard() {
                               whileTap={{ scale: 0.98 }}
                               initial={{ opacity: 0, y: 10 }}
                               animate={{ opacity: 1, y: 0, transition: { delay: 0.05 * index } }}
+                              onClick={() => toggleArrayItem("mainSources", source.value)}
                             >
-                              <RadioGroupItem value={source.value} id={source.value} />
-                              <Label htmlFor={source.value} className="cursor-pointer w-full">
+                              <Checkbox
+                                id={`source-${source.value}`}
+                                checked={formData.mainSources.includes(source.value)}
+                                onCheckedChange={() => toggleArrayItem("mainSources", source.value)}
+                              />
+                              <Label htmlFor={`source-${source.value}`} className="cursor-pointer w-full">
                                 {source.label}
                               </Label>
                             </motion.div>
                           ))}
-                        </RadioGroup>
+                        </div>
                       </motion.div>
 
-                      {formData.mainSource === "other" && (
+                      {formData.mainSources.includes("other") && (
                         <motion.div
                           initial={{ opacity: 0, height: 0 }}
                           animate={{ opacity: 1, height: "auto" }}
@@ -622,18 +659,21 @@ export function OnboardingWizard() {
 
                         <motion.div variants={fadeInUp} className="space-y-2">
                           <Label htmlFor="individualTotalInPeriod">
-                            Total sessions in mentoring period/contract *
+                            Total 1-on-1 sessions in contract period *
                           </Label>
                           <Input
                             id="individualTotalInPeriod"
                             type="number"
-                            placeholder="E.g.: 12 sessions per year, 6 sessions per semester"
+                            placeholder="E.g.: 12 (for annual contract), 24 (for biannual)"
                             value={formData.individualTotalInPeriod || ""}
                             onChange={(e) =>
                               updateFormData("individualTotalInPeriod", parseInt(e.target.value) || 0)
                             }
                             className="transition-all duration-300 focus:ring-2 focus:ring-primary/20"
                           />
+                          <p className="text-xs text-muted-foreground">
+                            Total number of individual sessions included in the mentoring contract
+                          </p>
                         </motion.div>
 
                         <motion.div variants={fadeInUp} className="space-y-2">
@@ -678,6 +718,7 @@ export function OnboardingWizard() {
                             { value: "comunidade-facebook", label: "Facebook Community" },
                             { value: "comunidade-discord", label: "Discord Community" },
                             { value: "plataforma-propria", label: "Own Platform" },
+                            { value: "other", label: "Other" },
                           ].map((item, index) => (
                             <motion.div
                               key={item.value}
@@ -699,6 +740,21 @@ export function OnboardingWizard() {
                             </motion.div>
                           ))}
                         </div>
+                        {formData.communicationMethods.includes("other") && (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: "auto" }}
+                            exit={{ opacity: 0, height: 0 }}
+                            className="space-y-2 mt-2"
+                          >
+                            <Input
+                              placeholder="Specify your custom communication method"
+                              value={formData.customCommunicationMethod}
+                              onChange={(e) => updateFormData("customCommunicationMethod", e.target.value)}
+                              className="transition-all duration-300 focus:ring-2 focus:ring-primary/20"
+                            />
+                          </motion.div>
+                        )}
                       </motion.div>
 
                       {/* Other Deliverables */}
@@ -711,6 +767,7 @@ export function OnboardingWizard() {
                             { value: "exclusive-content", label: "Exclusive Material (ebooks, frameworks)" },
                             { value: "community", label: "Community/Network Access" },
                             { value: "exclusive-events", label: "Exclusive Events" },
+                            { value: "other", label: "Other" },
                           ].map((item, index) => (
                             <motion.div
                               key={item.value}
@@ -732,6 +789,21 @@ export function OnboardingWizard() {
                             </motion.div>
                           ))}
                         </div>
+                        {formData.otherDeliverables.includes("other") && (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: "auto" }}
+                            exit={{ opacity: 0, height: 0 }}
+                            className="space-y-2 mt-2"
+                          >
+                            <Input
+                              placeholder="Specify your custom deliverable"
+                              value={formData.customOtherDeliverable}
+                              onChange={(e) => updateFormData("customOtherDeliverable", e.target.value)}
+                              className="transition-all duration-300 focus:ring-2 focus:ring-primary/20"
+                            />
+                          </motion.div>
+                        )}
                       </motion.div>
                     </CardContent>
                   </>
@@ -940,8 +1012,8 @@ export function OnboardingWizard() {
                       // Step 5 (Documents): Final submit
                       handleFinalSubmit()
                     } else {
-                      // Steps 1-3: Just advance
-                      nextStep()
+                      // Steps 1-3: Validate and advance
+                      handleNextStep()
                     }
                   }}
                   disabled={(!isStepValid() || isSubmitting) && currentStep !== 4}

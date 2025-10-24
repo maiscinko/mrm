@@ -71,7 +71,7 @@ export async function POST(request: Request) {
         club_category: data.clubCategory,
         active_mentees: data.activeMentees,
         niche_area: data.nicheArea,
-        main_source: data.mainSource || null,
+        main_sources: data.mainSources || [],
         other_source: data.otherSource || null,
         mentoring_style: data.mentoringStyle,
         framework: data.framework || null,
@@ -109,7 +109,9 @@ export async function POST(request: Request) {
         individual_format: data.individualFormat,
         // Communication methods
         communication_methods: data.communicationMethods || [],
+        custom_communication_method: data.customCommunicationMethod || null,
         other_deliverables: data.otherDeliverables || [],
+        custom_other_deliverable: data.customOtherDeliverable || null,
       })
       .select()
       .single()

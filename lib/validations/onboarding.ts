@@ -22,11 +22,9 @@ export const onboardingSchema = z.object({
     .int("Número de mentorados deve ser um número inteiro")
     .min(0, "Número de mentorados deve ser maior ou igual a 0")
     .max(1000, "Número de mentorados deve ser menor que 1000"),
-  nicheArea: z.string().min(3, "Nicho de atuação deve ter pelo menos 3 caracteres"),
-  mainSource: z.enum(["mls-referral", "personal-network", "social-media", "mls-events", "other"], {
-    errorMap: () => ({ message: "Selecione uma fonte válida" }),
-  }).optional(),
-  otherSource: z.string().max(200, "Descrição deve ter no máximo 200 caracteres").optional(),
+  nicheArea: z.string().min(3, "Niche area must have at least 3 characters"),
+  mainSources: z.array(z.string()).default([]),
+  otherSource: z.string().max(200, "Description must be at most 200 characters").optional(),
 
   // Step 3: Entregáveis
   // Encontros em Grupo
@@ -55,7 +53,9 @@ export const onboardingSchema = z.object({
   }),
   // Forma de Comunicação
   communicationMethods: z.array(z.string()).default([]),
+  customCommunicationMethod: z.string().max(200, "Custom communication method must be at most 200 characters").optional(),
   otherDeliverables: z.array(z.string()).default([]),
+  customOtherDeliverable: z.string().max(200, "Custom deliverable must be at most 200 characters").optional(),
 
   // Step 4: Metodologia & Outcomes
   framework: z.enum(["grow", "okr", "smart", "custom"], {
