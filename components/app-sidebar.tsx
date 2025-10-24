@@ -10,7 +10,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarProvider,
+  useSidebar,
 } from "@/components/ui/sidebar"
 import { Button } from "@/components/ui/button"
 import { createClient } from "@/lib/supabase/client"
@@ -52,6 +52,7 @@ export function AppSidebar() {
   const pathname = usePathname()
   const router = useRouter()
   const supabase = createClient()
+  const { state } = useSidebar()
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
@@ -65,26 +66,30 @@ export function AppSidebar() {
   ]
 
   return (
-    <Sidebar>
+    <Sidebar collapsible="icon">
       <SidebarHeader className="border-b px-6 py-4">
-        <h2 className="text-lg font-semibold">MRM</h2>
+        {state === "expanded" ? (
+          <h2 className="text-lg font-semibold">MRM</h2>
+        ) : (
+          <h2 className="text-lg font-semibold">M</h2>
+        )}
       </SidebarHeader>
-      
+
       <SidebarContent>
         <SidebarMenu>
           {navItems.map((item) => (
             <SidebarMenuItem key={item.href}>
-              <SidebarMenuButton asChild isActive={pathname === item.href}>
+              <SidebarMenuButton asChild isActive={pathname === item.href} tooltip={item.label}>
                 <Link href={item.href}>
                   {item.icon}
-                  <span>{item.label}</span>
+                  {state === "expanded" && <span>{item.label}</span>}
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
           ))}
         </SidebarMenu>
       </SidebarContent>
-      
+
       <SidebarFooter className="border-t p-4">
         <Button
           variant="outline"
@@ -92,7 +97,7 @@ export function AppSidebar() {
           onClick={handleLogout}
         >
           <LogoutIcon />
-          <span className="ml-2">Logout</span>
+          {state === "expanded" && <span className="ml-2">Logout</span>}
         </Button>
       </SidebarFooter>
     </Sidebar>

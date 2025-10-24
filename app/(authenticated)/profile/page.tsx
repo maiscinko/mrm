@@ -43,7 +43,11 @@ export default function ProfilePage() {
         return
       }
 
-      const { data, error } = await supabase.from("users").select("*").eq("id", user.id).single()
+      const { data, error } = await supabase
+        .from("mentor_profiles")
+        .select("*")
+        .eq("user_id", user.id)
+        .single()
 
       if (error) throw error
 
@@ -52,8 +56,8 @@ export default function ProfilePage() {
           full_name: data.full_name || "",
           bio: data.bio || "",
           specialties: data.specialties || [],
-          ai_tone: data.ai_tone || "empathetic",
-          mls_member: data.mls_member || false,
+          ai_tone: data.mentoring_style || "empathetic",
+          mls_member: data.is_mls_member || false,
           mls_code: data.mls_code || "",
         })
       }
@@ -75,14 +79,14 @@ export default function ProfilePage() {
       if (!user) throw new Error("Not authenticated")
 
       const { error } = await supabase
-        .from("users")
+        .from("mentor_profiles")
         .update({
           full_name: profile.full_name,
           bio: profile.bio,
           specialties: profile.specialties,
-          ai_tone: profile.ai_tone,
+          mentoring_style: profile.ai_tone,
         })
-        .eq("id", user.id)
+        .eq("user_id", user.id)
 
       if (error) throw error
 
