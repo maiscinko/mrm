@@ -249,15 +249,34 @@ export default function LoginPage() {
       }
 
       console.log('[Email Signup] Success:', data.user?.email)
-      toast({
-        title: "Account Created! 🎉",
-        description: `Welcome! You can now sign in with ${data.user?.email}`,
-      })
+      console.log('[Email Signup] Confirmation sent?', data.user?.email_confirmed_at === null)
 
-      // Switch to login mode after successful signup
-      setAuthMode('email')
-      setPassword('')
-      setConfirmPassword('')
+      // ⚓ ANCHOR: EMAIL_CONFIRMATION_UX
+      // REASON: Supabase hosted requires email confirmation by default
+      // PATTERN: Check if user needs to confirm email before login
+      // UX: Clear message about next steps (check email vs immediate login)
+      if (data.user?.email_confirmed_at === null) {
+        // Email confirmation required
+        toast({
+          title: "Check Your Email! 📧",
+          description: `We sent a confirmation link to ${data.user?.email}. Click the link to activate your account.`,
+          duration: 10000, // 10 seconds
+        })
+        console.log('[Email Signup] User needs to confirm email before login')
+      } else {
+        // Email confirmation not required (disabled in Supabase)
+        toast({
+          title: "Account Created! 🎉",
+          description: `Welcome! You can now sign in with ${data.user?.email}`,
+        })
+        console.log('[Email Signup] Email confirmation not required, can login immediately')
+
+        // Switch to login mode after successful signup
+        setAuthMode('email')
+        setPassword('')
+        setConfirmPassword('')
+      }
+
       setLoading(false)
     } catch (error) {
       console.error('[Email Signup Error]:', error)
