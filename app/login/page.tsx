@@ -257,14 +257,18 @@ export default function LoginPage() {
       // REASON: Supabase hosted requires email confirmation by default
       // PATTERN: Check if user needs to confirm email before login
       // UX: Clear message about next steps (check email vs immediate login)
+      // IMPROVEMENT: Don't switch modes, keep form visible, show clear instructions
       if (data.user?.email_confirmed_at === null) {
         // Email confirmation required
         toast({
-          title: "Check Your Email! 📧",
-          description: `We sent a confirmation link to ${data.user?.email}. Click the link to activate your account.`,
-          duration: 10000, // 10 seconds
+          title: "✅ Account Created! Check Your Email 📧",
+          description: `We sent a confirmation link to ${data.user?.email}. Please check your inbox and click the link to activate your account, then come back here to sign in.`,
+          duration: 15000, // 15 seconds - enough time to read
         })
         console.log('[Email Signup] User needs to confirm email before login')
+
+        // Keep signup form visible with instructions
+        // User will manually switch to login after confirming
       } else {
         // Email confirmation not required (disabled in Supabase)
         toast({
