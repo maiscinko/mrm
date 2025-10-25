@@ -885,11 +885,18 @@ export function OnboardingWizard({ userEmail = "" }: OnboardingWizardProps) {
                       )}
 
                       <motion.div variants={fadeInUp} className="space-y-3">
-                        <Label>Mentoring style *</Label>
+                        <Label className={cn(
+                          formData.mentoringStyle === "" && "text-red-500"
+                        )}>
+                          Mentoring style * {formData.mentoringStyle === "" && <span className="text-xs">(Required - please select one)</span>}
+                        </Label>
                         <RadioGroup
                           value={formData.mentoringStyle}
                           onValueChange={(value) => updateFormData("mentoringStyle", value)}
-                          className="space-y-2"
+                          className={cn(
+                            "space-y-2",
+                            formData.mentoringStyle === "" && "border-2 border-red-300 rounded-lg p-2"
+                          )}
                         >
                           {[
                             { value: "directive", label: "Directive (more direct guidance)" },
@@ -1021,8 +1028,18 @@ export function OnboardingWizard({ userEmail = "" }: OnboardingWizardProps) {
                 <Button
                   type="button"
                   onClick={() => {
+                    // ⚓ ANCHOR: ONBOARDING_SAVE_VALIDATION
+                    // REASON: Show clear error when required fields missing
+                    // PATTERN: Check validation before save, show toast with specific errors
+                    // UX: User knows exactly what's missing instead of nothing happening
                     if (currentStep === 3) {
-                      // Step 4 (Methodology): Save data and advance to documents
+                      // Step 4 (Methodology): Validate before saving
+                      const errors = getStepValidationErrors()
+                      if (errors.length > 0) {
+                        toast.error(`Please fill in required fields:\n${errors.join('\n')}`)
+                        return
+                      }
+                      // Save data and advance to documents
                       saveOnboardingData()
                     } else if (currentStep === 4) {
                       // Step 5 (Documents): Final submit
@@ -1032,8 +1049,11 @@ export function OnboardingWizard({ userEmail = "" }: OnboardingWizardProps) {
                       handleNextStep()
                     }
                   }}
-                  disabled={(!isStepValid() || isSubmitting) && currentStep !== 4}
-                  className="flex items-center gap-1 transition-all duration-300 rounded-2xl"
+                  disabled={isSubmitting}
+                  className={cn(
+                    "flex items-center gap-1 transition-all duration-300 rounded-2xl",
+                    (!isStepValid() && currentStep !== 4) && "opacity-50 cursor-not-allowed"
+                  )}
                 >
                   {isSubmitting ? (
                     <>
