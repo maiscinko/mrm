@@ -8,8 +8,8 @@ export const onboardingSchema = z.object({
     .min(3, "Nome deve ter pelo menos 3 caracteres")
     .max(100, "Nome deve ter no máximo 100 caracteres"),
   email: z.string().email("Email inválido"),
-  linkedinUrl: z.string().url("URL do LinkedIn inválida").optional().or(z.literal("")),
-  instagramUrl: z.string().url("URL do Instagram inválida").optional().or(z.literal("")),
+  linkedinUrl: z.string().max(200).optional().or(z.literal("")),
+  instagramUrl: z.string().max(200).optional().or(z.literal("")),
   bio: z.string().max(1000, "Bio deve ter no máximo 1000 caracteres").optional(),
 
   // Step 2: Club & Categoria MLS
@@ -58,7 +58,7 @@ export const onboardingSchema = z.object({
   customOtherDeliverable: z.string().max(200, "Custom deliverable must be at most 200 characters").optional(),
 
   // Step 4: Metodologia & Outcomes
-  framework: z.enum(["grow", "okr", "smart", "custom"], {
+  framework: z.enum(["grow", "okr", "smart", "custom", ""], {
     errorMap: () => ({ message: "Selecione um framework válido" }),
   }).optional(),
   customFramework: z.string().max(500, "Descrição deve ter no máximo 500 caracteres").optional(),

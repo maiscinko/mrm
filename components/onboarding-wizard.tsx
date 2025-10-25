@@ -226,6 +226,8 @@ export function OnboardingWizard({ userEmail = "" }: OnboardingWizardProps) {
       if (!response.ok) {
         const errorMsg = result.details || result.error || "Failed to save onboarding"
         console.error("[Onboarding Save] Error:", errorMsg)
+        console.error("[Onboarding Save] Full response:", result)
+        toast.error(`Save failed: ${errorMsg}`, { duration: 10000 })
         throw new Error(errorMsg)
       }
 
@@ -399,28 +401,37 @@ export function OnboardingWizard({ userEmail = "" }: OnboardingWizardProps) {
                       </motion.div>
 
                       <motion.div variants={fadeInUp} className="space-y-2">
-                        <Label htmlFor="linkedinUrl">LinkedIn</Label>
-                        <Input
-                          id="linkedinUrl"
-                          placeholder="username or @username"
-                          value={formData.linkedinUrl}
-                          onChange={(e) => updateFormData("linkedinUrl", e.target.value)}
-                          className="transition-all duration-300 focus:ring-2 focus:ring-primary/20"
-                        />
+                        <Label htmlFor="linkedinUrl">LinkedIn Profile</Label>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm text-muted-foreground">linkedin.com/in/</span>
+                          <Input
+                            id="linkedinUrl"
+                            placeholder="yourname"
+                            value={formData.linkedinUrl.replace(/^https?:\/\/(www\.)?linkedin\.com\/in\//, '').replace(/^@/, '')}
+                            onChange={(e) => updateFormData("linkedinUrl", e.target.value.replace(/^@/, ''))}
+                            className="flex-1 transition-all duration-300 focus:ring-2 focus:ring-primary/20"
+                          />
+                        </div>
                         <p className="text-xs text-muted-foreground">
-                          We'll use this to understand your voice and style (accepts username, @username or full URL)
+                          Just your LinkedIn username (we'll build the full URL)
                         </p>
                       </motion.div>
 
                       <motion.div variants={fadeInUp} className="space-y-2">
-                        <Label htmlFor="instagramUrl">Instagram</Label>
-                        <Input
-                          id="instagramUrl"
-                          placeholder="username or @username"
-                          value={formData.instagramUrl}
-                          onChange={(e) => updateFormData("instagramUrl", e.target.value)}
-                          className="transition-all duration-300 focus:ring-2 focus:ring-primary/20"
-                        />
+                        <Label htmlFor="instagramUrl">Instagram Profile</Label>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm text-muted-foreground">@</span>
+                          <Input
+                            id="instagramUrl"
+                            placeholder="yourname"
+                            value={formData.instagramUrl.replace(/^https?:\/\/(www\.)?instagram\.com\//, '').replace(/^@/, '')}
+                            onChange={(e) => updateFormData("instagramUrl", e.target.value.replace(/^@/, ''))}
+                            className="flex-1 transition-all duration-300 focus:ring-2 focus:ring-primary/20"
+                          />
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          Just your Instagram username (without @)
+                        </p>
                       </motion.div>
 
                       <motion.div variants={fadeInUp} className="space-y-2">
