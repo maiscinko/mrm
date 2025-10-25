@@ -176,6 +176,11 @@ export default function LoginPage() {
 
   const handleEmailSignup = async (e: React.FormEvent) => {
     e.preventDefault()
+    console.log('[Signup] Button clicked, starting signup process...')
+    console.log('[Signup] Email:', email)
+    console.log('[Signup] Password length:', password.length)
+    console.log('[Signup] Is password valid?', isPasswordValid)
+    console.log('[Signup] Passwords match?', password === confirmPassword)
     setLoading(true)
 
     // Validation
