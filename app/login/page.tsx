@@ -35,11 +35,13 @@ export default function LoginPage() {
   // PATTERN: Check each requirement individually, show green checkmarks
   // UX: User sees requirements before submitting, knows exactly what's wrong
   // BEST PRACTICE: 2025 auth UX - show requirements always, not in tooltip
+  // SECURITY: Min 11 chars recommended (NIST 2024), uppercase, lowercase, number, special char
   const passwordRequirements = {
-    minLength: password.length >= 6,
+    minLength: password.length >= 11,
     hasUppercase: /[A-Z]/.test(password),
     hasLowercase: /[a-z]/.test(password),
     hasNumber: /[0-9]/.test(password),
+    hasSpecial: /[!@#$%^&*(),.?":{}|<>]/.test(password),
   }
 
   const isPasswordValid = Object.values(passwordRequirements).every(Boolean)
@@ -459,7 +461,7 @@ export default function LoginPage() {
                     <div className="space-y-0.5">
                       <div className={`flex items-center gap-2 ${passwordRequirements.minLength ? 'text-green-600' : 'text-muted-foreground'}`}>
                         <span>{passwordRequirements.minLength ? '✓' : '○'}</span>
-                        <span>At least 6 characters</span>
+                        <span>At least 11 characters (recommended)</span>
                       </div>
                       <div className={`flex items-center gap-2 ${passwordRequirements.hasUppercase ? 'text-green-600' : 'text-muted-foreground'}`}>
                         <span>{passwordRequirements.hasUppercase ? '✓' : '○'}</span>
@@ -472,6 +474,10 @@ export default function LoginPage() {
                       <div className={`flex items-center gap-2 ${passwordRequirements.hasNumber ? 'text-green-600' : 'text-muted-foreground'}`}>
                         <span>{passwordRequirements.hasNumber ? '✓' : '○'}</span>
                         <span>One number (0-9)</span>
+                      </div>
+                      <div className={`flex items-center gap-2 ${passwordRequirements.hasSpecial ? 'text-green-600' : 'text-muted-foreground'}`}>
+                        <span>{passwordRequirements.hasSpecial ? '✓' : '○'}</span>
+                        <span>One special character (!@#$%^&*...)</span>
                       </div>
                     </div>
                   </div>
