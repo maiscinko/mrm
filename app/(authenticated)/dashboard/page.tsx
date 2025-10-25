@@ -37,7 +37,7 @@ export default async function DashboardPage({
   const page = Number(searchParams.page) || 1
   const search = searchParams.search || ""
   const showAll = searchParams.show_all === "true"
-  const sort = searchParams.sort || "plan_end_date"
+  const sort = searchParams.sort || "contract_end_date"
   const statusFilter = searchParams.status || "all"
   const itemsPerPage = 20
 
@@ -59,8 +59,8 @@ export default async function DashboardPage({
     query = query.eq("status", statusFilter)
   }
 
-  // Apply sorting
-  const sortColumn = sort === "name" ? "full_name" : sort === "recent" ? "updated_at" : "plan_end_date"
+  // Apply sorting (v0.5: contract_end_date not plan_end_date)
+  const sortColumn = sort === "name" ? "full_name" : sort === "recent" ? "updated_at" : "contract_end_date"
   const ascending = sort === "name"
   query = query.order(sortColumn, { ascending })
 

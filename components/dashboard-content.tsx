@@ -142,7 +142,7 @@ export function DashboardContent({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="plan_end_date">{t("sortByDate")}</SelectItem>
+              <SelectItem value="contract_end_date">{t("sortByDate")}</SelectItem>
               <SelectItem value="name">{t("sortByName")}</SelectItem>
               <SelectItem value="recent">{t("sortByRecent")}</SelectItem>
             </SelectContent>

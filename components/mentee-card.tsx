@@ -27,7 +27,8 @@ export function MenteeCard({ mentee }: MenteeCardProps) {
   const progressPercentage = totalDeliverables > 0 ? (completedDeliverables / totalDeliverables) * 100 : 0
 
   // Calculate days remaining
-  const daysRemaining = differenceInDays(new Date(mentee.plan_end_date), new Date())
+  // v0.5 compatibility: use contract_end_date
+  const daysRemaining = differenceInDays(new Date(mentee.contract_end_date || mentee.created_at), new Date())
 
   // Determine status badge color
   const getStatusColor = () => {

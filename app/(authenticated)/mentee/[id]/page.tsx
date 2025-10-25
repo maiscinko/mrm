@@ -22,7 +22,7 @@ export default async function MenteeDetailPage({ params }: { params: { id: strin
     redirect("/login")
   }
 
-  // Fetch mentee with all related data
+  // Fetch mentee with all related data (v0.5 schema compatibility)
   const { data: mentee, error } = await supabase
     .from("mentees")
     .select(
@@ -31,7 +31,8 @@ export default async function MenteeDetailPage({ params }: { params: { id: strin
       sessions(*),
       deliverables(*),
       progress_tracking(*),
-      ai_insights(*)
+      ai_insights(*),
+      mentee_companies(*)
     `,
     )
     .eq("id", params.id)
@@ -41,10 +42,16 @@ export default async function MenteeDetailPage({ params }: { params: { id: strin
     notFound()
   }
 
-  const daysRemaining = differenceInDays(new Date(mentee.plan_end_date), new Date())
+  // v0.5 compatibility: contract_end_date (not plan_end_date)
+  const daysRemaining = differenceInDays(new Date(mentee.contract_end_date || mentee.created_at), new Date())
   const totalDeliverables = mentee.deliverables?.length || 0
-  const completedDeliverables = mentee.deliverables?.filter((d) => d.status === "completed").length || 0
+  const completedDeliverables = mentee.deliverables?.filter((d: any) => d.status === "completed").length || 0
   const progressPercentage = totalDeliverables > 0 ? Math.round((completedDeliverables / totalDeliverables) * 100) : 0
+
+  // Extract primary company info from mentee_companies
+  const primaryCompany = mentee.mentee_companies?.[0]
+  const company = primaryCompany?.company_legal_name || null
+  const role = primaryCompany?.mentee_role || null
 
   const getInitials = (name: string) => {
     return name
@@ -62,15 +69,15 @@ export default async function MenteeDetailPage({ params }: { params: { id: strin
         <div className="mb-8 flex items-start justify-between gap-4">
           <div className="flex items-center gap-4">
             <Avatar className="h-20 w-20">
-              <AvatarImage src={mentee.photo_url || undefined} alt={mentee.full_name} />
+              <AvatarImage src={undefined} alt={mentee.full_name} />
               <AvatarFallback className="bg-primary text-primary-foreground text-2xl">
                 {getInitials(mentee.full_name)}
               </AvatarFallback>
             </Avatar>
             <div>
               <h1 className="text-3xl font-bold">{mentee.full_name}</h1>
-              {mentee.company && <p className="text-muted-foreground">{mentee.company}</p>}
-              {mentee.role && <p className="text-sm text-muted-foreground">{mentee.role}</p>}
+              {company && <p className="text-muted-foreground">{company}</p>}
+              {role && <p className="text-sm text-muted-foreground">{role}</p>}
               <div className="mt-2 flex items-center gap-3">
                 <Badge variant={daysRemaining <= 30 ? "default" : "outline"}>{daysRemaining} days remaining</Badge>
                 <span className="text-sm text-muted-foreground">{progressPercentage}% complete</span>
