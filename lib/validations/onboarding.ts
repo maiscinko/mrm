@@ -62,7 +62,7 @@ export const onboardingSchema = z.object({
     errorMap: () => ({ message: "Selecione um framework válido" }),
   }).optional(),
   customFramework: z.string().max(500, "Descrição deve ter no máximo 500 caracteres").optional(),
-  mentoringStyle: z.enum(["directive", "coaching", "facilitator", "hybrid"], {
+  mentoringStyle: z.enum(["provocative", "empathetic", "direct"], {
     errorMap: () => ({ message: "Selecione um estilo de mentoria válido" }),
   }),
   successMetrics: z.array(z.string()).default([]),

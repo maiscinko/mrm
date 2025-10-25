@@ -954,10 +954,9 @@ export function OnboardingWizard({ userEmail = "" }: OnboardingWizardProps) {
                           )}
                         >
                           {[
-                            { value: "directive", label: "Directive (more direct guidance)" },
-                            { value: "coaching", label: "Coaching (provocative questions)" },
-                            { value: "facilitator", label: "Facilitator (mentee leads)" },
-                            { value: "hybrid", label: "Hybrid (balanced)" },
+                            { value: "provocative", label: "Provocative (challenging questions, push boundaries)" },
+                            { value: "empathetic", label: "Empathetic (supportive, mentee-centered)" },
+                            { value: "direct", label: "Direct (clear guidance, action-oriented)" },
                           ].map((style, index) => (
                             <motion.div
                               key={style.value}
