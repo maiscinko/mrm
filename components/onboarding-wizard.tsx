@@ -30,7 +30,7 @@ import { useRouter } from "next/navigation"
 
 const steps = [
   { id: "identification", title: "Identification" },
-  { id: "club", title: "Your MLS Club" },
+  { id: "club", title: "Your Club" },
   { id: "deliverables", title: "Deliverables" },
   { id: "methodology", title: "Methodology" },
   { id: "documents", title: "Documents" },
@@ -269,7 +269,7 @@ export function OnboardingWizard({ userEmail = "" }: OnboardingWizardProps) {
         if (formData.email.trim() === "") errors.push("Email is required")
         break
       case 1:
-        if (formData.clubCategory === "") errors.push("MLS Category is required")
+        if (formData.clubCategory === "") errors.push("Club Category is required")
         if (formData.nicheArea.trim() === "") errors.push("Niche Area is required")
         break
       case 2:
@@ -459,18 +459,18 @@ export function OnboardingWizard({ userEmail = "" }: OnboardingWizardProps) {
                   </>
                 )}
 
-                {/* Step 2: Your MLS Club & Category */}
+                {/* Step 2: Your Club & Category */}
                 {currentStep === 1 && (
                   <>
                     <CardHeader>
-                      <CardTitle>Your MLS Club & Category</CardTitle>
+                      <CardTitle>Your Club & Category</CardTitle>
                       <CardDescription>
-                        Information about your club and mentees
+                        Information about your mentoring club and mentees
                       </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <motion.div variants={fadeInUp} className="space-y-2">
-                        <Label htmlFor="clubName">Your MLS Club Name</Label>
+                        <Label htmlFor="clubName">Your Club Name (Optional)</Label>
                         <Input
                           id="clubName"
                           placeholder="E.g.: Brain, Prosperus, Mindset Master"
@@ -539,10 +539,10 @@ export function OnboardingWizard({ userEmail = "" }: OnboardingWizardProps) {
                         <Label>Main sources of mentee inflow (select all that apply)</Label>
                         <div className="grid grid-cols-1 gap-2">
                           {[
-                            { value: "mls-referral", label: "Referral from other MLS mentors" },
+                            { value: "mentor-referral", label: "Referral from other mentors" },
                             { value: "personal-network", label: "Personal network" },
                             { value: "social-media", label: "LinkedIn / Social media" },
-                            { value: "mls-events", label: "MLS events" },
+                            { value: "community-events", label: "Mentoring community events" },
                             { value: "prospecting", label: "Active prospecting" },
                             { value: "ads", label: "Paid ads (Google, LinkedIn, etc.)" },
                             { value: "other-products", label: "Other products/services I offer" },
