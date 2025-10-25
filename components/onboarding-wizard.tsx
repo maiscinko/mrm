@@ -197,9 +197,12 @@ export function OnboardingWizard({ userEmail = "" }: OnboardingWizardProps) {
   }
 
   const saveOnboardingData = async () => {
+    console.log("=== ONBOARDING SAVE STARTED ===")
     console.log("[Onboarding Save] Button clicked - starting save process")
     console.log("[Onboarding Save] Current step:", currentStep)
     console.log("[Onboarding Save] Is submitting:", isSubmitting)
+    console.log("[Onboarding Save] Form data:", JSON.stringify(formData, null, 2))
+
     setIsSubmitting(true)
 
     try {
@@ -210,7 +213,8 @@ export function OnboardingWizard({ userEmail = "" }: OnboardingWizardProps) {
         instagramUrl: normalizeInstagramUrl(formData.instagramUrl),
       }
 
-      console.log("[Onboarding Save] Sending data to API:", JSON.stringify(normalizedData, null, 2))
+      console.log("[Onboarding Save] Normalized data:", JSON.stringify(normalizedData, null, 2))
+      console.log("[Onboarding Save] Calling API /api/onboarding...")
 
       const response = await fetch("/api/onboarding", {
         method: "POST",
@@ -218,27 +222,32 @@ export function OnboardingWizard({ userEmail = "" }: OnboardingWizardProps) {
         body: JSON.stringify(normalizedData),
       })
 
-      console.log("[Onboarding Save] Response status:", response.status)
+      console.log("[Onboarding Save] Response received - status:", response.status)
 
       const result = await response.json()
       console.log("[Onboarding Save] Response body:", JSON.stringify(result, null, 2))
 
       if (!response.ok) {
         const errorMsg = result.details || result.error || "Failed to save onboarding"
-        console.error("[Onboarding Save] Error:", errorMsg)
+        console.error("[Onboarding Save] ❌ ERROR:", errorMsg)
         console.error("[Onboarding Save] Full response:", result)
         toast.error(`Save failed: ${errorMsg}`, { duration: 10000 })
+        setIsSubmitting(false)
         throw new Error(errorMsg)
       }
 
+      console.log("[Onboarding Save] ✅ SUCCESS - Data saved!")
       setIsSaved(true)
-      toast.success("Data saved successfully! Now you can upload complementary documents.")
+      toast.success("✅ Data saved successfully! Now you can upload complementary documents.", { duration: 5000 })
       setIsSubmitting(false)
       // Advance to step 5 (documents)
+      console.log("[Onboarding Save] Advancing to step 5 (documents)...")
       nextStep()
+      console.log("=== ONBOARDING SAVE COMPLETED ===")
     } catch (err) {
+      console.error("=== ONBOARDING SAVE FAILED ===")
       console.error("[Onboarding Error]:", err)
-      toast.error(err instanceof Error ? err.message : "Unknown error saving data")
+      toast.error(err instanceof Error ? err.message : "Unknown error saving data", { duration: 10000 })
       setIsSubmitting(false)
     }
   }
@@ -844,6 +853,30 @@ export function OnboardingWizard({ userEmail = "" }: OnboardingWizardProps) {
                       <CardDescription>
                         How you work and measure success
                       </CardDescription>
+                      {/* ⚓ ANCHOR: VALIDATION_CHECKLIST */}
+                      {/* REASON: Show clear visual feedback of what's required vs optional */}
+                      {/* PATTERN: Real-time checklist with green checkmarks and red warnings */}
+                      {/* UX: User sees exactly what's missing before clicking Save */}
+                      <div className="mt-4 p-4 rounded-lg border-2 border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/50">
+                        <p className="font-semibold text-sm mb-2">📋 Required fields for this step:</p>
+                        <ul className="space-y-1 text-sm">
+                          <li className={cn(
+                            "flex items-center gap-2",
+                            formData.mentoringStyle !== "" ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"
+                          )}>
+                            {formData.mentoringStyle !== "" ? "✓" : "⚠️"}
+                            <span className={formData.mentoringStyle === "" ? "font-semibold" : ""}>
+                              Mentoring Style {formData.mentoringStyle === "" && "(Please select below)"}
+                            </span>
+                          </li>
+                          <li className="flex items-center gap-2 text-muted-foreground">
+                            ℹ️ Framework (optional)
+                          </li>
+                          <li className="flex items-center gap-2 text-muted-foreground">
+                            ℹ️ Success Metrics (optional)
+                          </li>
+                        </ul>
+                      </div>
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <motion.div variants={fadeInUp} className="space-y-3">
@@ -897,16 +930,27 @@ export function OnboardingWizard({ userEmail = "" }: OnboardingWizardProps) {
 
                       <motion.div variants={fadeInUp} className="space-y-3">
                         <Label className={cn(
-                          formData.mentoringStyle === "" && "text-red-500"
+                          "text-lg font-semibold",
+                          formData.mentoringStyle === "" && "text-red-600 dark:text-red-400"
                         )}>
-                          Mentoring style * {formData.mentoringStyle === "" && <span className="text-xs">(Required - please select one)</span>}
+                          Mentoring style *
+                          {formData.mentoringStyle === "" && (
+                            <span className="ml-2 text-sm font-normal text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950 px-2 py-1 rounded">
+                              ⚠️ Required - please select one option below
+                            </span>
+                          )}
+                          {formData.mentoringStyle !== "" && (
+                            <span className="ml-2 text-sm font-normal text-green-600 dark:text-green-400">
+                              ✓ Selected
+                            </span>
+                          )}
                         </Label>
                         <RadioGroup
                           value={formData.mentoringStyle}
                           onValueChange={(value) => updateFormData("mentoringStyle", value)}
                           className={cn(
                             "space-y-2",
-                            formData.mentoringStyle === "" && "border-2 border-red-300 rounded-lg p-2"
+                            formData.mentoringStyle === "" && "border-2 border-red-400 dark:border-red-600 rounded-lg p-3 bg-red-50/50 dark:bg-red-950/50"
                           )}
                         >
                           {[
@@ -1039,23 +1083,41 @@ export function OnboardingWizard({ userEmail = "" }: OnboardingWizardProps) {
                 <Button
                   type="button"
                   onClick={() => {
+                    console.log(`[Button Click] Current step: ${currentStep}, Button text: ${currentStep === 3 ? "Save & Continue" : currentStep === 4 ? "Finish" : "Next"}`)
+
                     // ⚓ ANCHOR: ONBOARDING_SAVE_VALIDATION
                     // REASON: Show clear error when required fields missing
                     // PATTERN: Check validation before save, show toast with specific errors
                     // UX: User knows exactly what's missing instead of nothing happening
                     if (currentStep === 3) {
+                      console.log("[Button Click] Step 4 (Methodology) - Checking validation...")
                       // Step 4 (Methodology): Validate before saving
                       const errors = getStepValidationErrors()
+                      console.log("[Button Click] Validation errors:", errors)
+
                       if (errors.length > 0) {
-                        toast.error(`Please fill in required fields:\n${errors.join('\n')}`)
+                        console.log("[Button Click] ❌ Validation failed - showing errors to user")
+                        toast.error(
+                          <div className="space-y-2">
+                            <p className="font-semibold">⚠️ Please fill in required fields:</p>
+                            <ul className="list-disc list-inside space-y-1">
+                              {errors.map((err, i) => <li key={i}>{err}</li>)}
+                            </ul>
+                          </div>,
+                          { duration: 8000 }
+                        )
                         return
                       }
+
+                      console.log("[Button Click] ✅ Validation passed - calling saveOnboardingData()")
                       // Save data and advance to documents
                       saveOnboardingData()
                     } else if (currentStep === 4) {
+                      console.log("[Button Click] Step 5 (Documents) - Final submit")
                       // Step 5 (Documents): Final submit
                       handleFinalSubmit()
                     } else {
+                      console.log(`[Button Click] Step ${currentStep + 1} - Validating and advancing...`)
                       // Steps 1-3: Validate and advance
                       handleNextStep()
                     }
