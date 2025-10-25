@@ -40,8 +40,6 @@ export function AddMenteeDialog({ children }: AddMenteeDialogProps) {
   const [onboardingData, setOnboardingData] = useState<{
     link: string
     name: string
-    email: string
-    whatsapp: string
   } | null>(null)
   const router = useRouter()
   const { toast } = useToast()
@@ -89,8 +87,6 @@ export function AddMenteeDialog({ children }: AddMenteeDialogProps) {
         setOnboardingData({
           link: result.onboardingLink,
           name: data.full_name,
-          email: data.email,
-          whatsapp: data.whatsapp,
         })
         setSuccessDialog(true)
         setOpen(false)
@@ -127,27 +123,19 @@ export function AddMenteeDialog({ children }: AddMenteeDialogProps) {
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            {/* Personal Info Section */}
+            {/* Mentee Identifier Section */}
             <div className="space-y-4">
-              <h3 className="text-sm font-semibold">Personal Information</h3>
+              <h3 className="text-sm font-semibold">Mentee Identifier</h3>
+              <p className="text-xs text-muted-foreground">
+                Just a reference name. The mentee will fill their full details via the onboarding link.
+              </p>
               <div className="space-y-2">
-                <Label htmlFor="full_name">Full Name *</Label>
-                <Input id="full_name" {...register("full_name")} placeholder="João da Silva" />
+                <Label htmlFor="full_name">Reference Name *</Label>
+                <Input id="full_name" {...register("full_name")} placeholder="e.g., João (CEO TechStart)" />
                 {errors.full_name && <p className="text-sm text-destructive">{errors.full_name.message}</p>}
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email *</Label>
-                  <Input id="email" type="email" {...register("email")} placeholder="joao@empresa.com.br" />
-                  {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="whatsapp">WhatsApp *</Label>
-                  <Input id="whatsapp" {...register("whatsapp")} placeholder="+5511999999999" />
-                  {errors.whatsapp && <p className="text-sm text-destructive">{errors.whatsapp.message}</p>}
-                </div>
+                <p className="text-xs text-muted-foreground">
+                  Use a name you'll recognize (e.g., "Maria - Coaching Q4" or "Pedro CEO SaaS")
+                </p>
               </div>
             </div>
 
@@ -298,8 +286,6 @@ export function AddMenteeDialog({ children }: AddMenteeDialogProps) {
           onOpenChange={setSuccessDialog}
           onboardingLink={onboardingData.link}
           menteeName={onboardingData.name}
-          menteeEmail={onboardingData.email}
-          menteeWhatsapp={onboardingData.whatsapp}
         />
       )}
     </>

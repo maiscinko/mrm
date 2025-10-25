@@ -33,14 +33,18 @@ export async function createMenteeWithOnboarding(data: CreateMenteeInput) {
     onboardingLinkExpiresAt.setDate(onboardingLinkExpiresAt.getDate() + 30)
 
     // ⚓ ANCHOR: INSERT MENTEE
-    // STATUS: pending_onboarding (mentor created, mentee hasn't filled onboarding form yet)
+    // REASON: Mentor creates contract only - mentee fills email/whatsapp in onboarding wizard
+    // PATTERN: Generate placeholder email/whatsapp (will be replaced during onboarding)
+    const placeholderEmail = `pending-${onboardingToken}@onboarding.temp`
+    const placeholderWhatsapp = "+00000000000"
+
     const { data: mentee, error: menteeError } = await supabase
       .from("mentees")
       .insert({
         mentor_id: user.id,
-        full_name: data.full_name,
-        email: data.email,
-        whatsapp: data.whatsapp,
+        full_name: data.full_name, // Reference name only (e.g., "João - CEO TechStart")
+        email: placeholderEmail, // Placeholder (replaced in Step 1 onboarding)
+        whatsapp: placeholderWhatsapp, // Placeholder (replaced in Step 1 onboarding)
         contract_start_date: format(contractStartDate, "yyyy-MM-dd"),
         contract_end_date: format(contractEndDate, "yyyy-MM-dd"),
         contract_duration_months: data.contract_duration_months,

@@ -12,6 +12,8 @@ import { useToast } from "@/hooks/use-toast"
 import { createClient } from "@/lib/supabase/client"
 
 const personalInfoSchema = z.object({
+  email: z.string().email("Valid email is required"),
+  whatsapp: z.string().min(10, "WhatsApp is required (with country code)"),
   cpf: z.string().min(11, "CPF must have 11 digits"),
   rg: z.string().min(1, "RG is required"),
   cep: z.string().min(8, "CEP must have 8 digits"),
@@ -99,13 +101,19 @@ export function PersonalInfoStep({ menteeId, data, onDataChange, onNext }: Perso
     }
   }
 
+  // ⚓ ANCHOR: SAVE STEP 1 - REPLACE PLACEHOLDER EMAIL/WHATSAPP
+  // REASON: Mentor creates with placeholders, mentee fills real email/whatsapp here
+  // PATTERN: UPDATE main columns (email, whatsapp) + JSONB (personal_info)
+  // UX: Mentee provides own contact info in first step
   const onSubmit = async (formData: PersonalInfoInput) => {
     setLoading(true)
     try {
-      // Update mentees.personal_info JSONB
+      // Update mentees: replace placeholder email/whatsapp + save personal_info
       const { error } = await supabase
         .from("mentees")
         .update({
+          email: formData.email, // Replace placeholder
+          whatsapp: formData.whatsapp, // Replace placeholder
           personal_info: {
             cpf: formData.cpf,
             rg: formData.rg,
@@ -148,8 +156,30 @@ export function PersonalInfoStep({ menteeId, data, onDataChange, onNext }: Perso
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-      {/* Documents */}
+      {/* Contact Information */}
       <div className="space-y-4">
+        <h3 className="text-sm font-semibold">Contact Information</h3>
+        <p className="text-xs text-muted-foreground">
+          Please provide your email and WhatsApp so your mentor can reach you.
+        </p>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="email">Email *</Label>
+            <Input id="email" type="email" {...register("email")} placeholder="you@example.com" />
+            {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="whatsapp">WhatsApp *</Label>
+            <Input id="whatsapp" {...register("whatsapp")} placeholder="+5511999999999" />
+            {errors.whatsapp && <p className="text-sm text-destructive">{errors.whatsapp.message}</p>}
+            <p className="text-xs text-muted-foreground">Include country code (e.g., +55 for Brazil)</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Documents */}
+      <div className="space-y-4 border-t pt-4">
         <h3 className="text-sm font-semibold">Documents</h3>
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">

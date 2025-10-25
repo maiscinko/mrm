@@ -13,21 +13,17 @@ interface OnboardingSuccessDialogProps {
   onOpenChange: (open: boolean) => void
   onboardingLink: string
   menteeName: string
-  menteeEmail: string
-  menteeWhatsapp: string
 }
 
 // ⚓ ANCHOR: ONBOARDING SUCCESS DIALOG
 // REASON: After mentor creates mentee, show onboarding link for sharing
-// PATTERN: Copy/Email/WhatsApp sharing options
-// UX: Clear call-to-action buttons + visual feedback on copy
+// PATTERN: Copy link sharing (mentor sends via their preferred channel)
+// UX: Clear call-to-action button + visual feedback on copy
 export function OnboardingSuccessDialog({
   open,
   onOpenChange,
   onboardingLink,
   menteeName,
-  menteeEmail,
-  menteeWhatsapp,
 }: OnboardingSuccessDialogProps) {
   const [copied, setCopied] = useState(false)
   const { toast } = useToast()
@@ -50,34 +46,8 @@ export function OnboardingSuccessDialog({
     }
   }
 
-  const handleEmail = () => {
-    const subject = encodeURIComponent("Complete Your Mentoring Onboarding")
-    const body = encodeURIComponent(`Hi ${menteeName},
-
-Welcome to our mentoring program! Please complete your onboarding by clicking the link below:
-
-${onboardingLink}
-
-This link will expire in 30 days.
-
-Looking forward to working with you!`)
-
-    window.open(`mailto:${menteeEmail}?subject=${subject}&body=${body}`, "_blank")
-  }
-
-  const handleWhatsApp = () => {
-    const text = encodeURIComponent(`Olá ${menteeName}! 👋
-
-Bem-vindo(a) ao programa de mentoria!
-
-Complete seu onboarding neste link:
-${onboardingLink}
-
-O link expira em 30 dias. Qualquer dúvida, só me avisar! 🚀`)
-
-    // Remove + from whatsapp number for URL
-    const whatsappNumber = menteeWhatsapp.replace(/\+/g, "")
-    window.open(`https://wa.me/${whatsappNumber}?text=${text}`, "_blank")
+  const handleOpenLink = () => {
+    window.open(onboardingLink, "_blank")
   }
 
   return (
@@ -106,19 +76,15 @@ O link expira em 30 dias. Qualquer dúvida, só me avisar! 🚀`)
 
           {/* Quick Actions */}
           <div className="space-y-3">
-            <Label>Share via:</Label>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <Label>Share link:</Label>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <Button onClick={handleCopy} variant="outline" className="justify-start">
                 <Copy className="mr-2 h-4 w-4" />
                 Copy Link
               </Button>
-              <Button onClick={handleEmail} variant="outline" className="justify-start">
-                <Mail className="mr-2 h-4 w-4" />
-                Send Email
-              </Button>
-              <Button onClick={handleWhatsApp} variant="outline" className="justify-start">
-                <MessageCircle className="mr-2 h-4 w-4" />
-                WhatsApp
+              <Button onClick={handleOpenLink} variant="outline" className="justify-start">
+                <ExternalLink className="mr-2 h-4 w-4" />
+                Open Link
               </Button>
             </div>
           </div>
