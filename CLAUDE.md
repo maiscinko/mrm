@@ -36,7 +36,7 @@ Todo desenvolvimento deriva do PRD.json. **PRD é a bíblia** - specs completas,
 ### **2. COMPETÊNCIA**
 - ✅ Código limpo, legível, mantível
 - ✅ Testes críticos (auth, payment, data integrity)
-- ✅ Documentação clara (READMEs, comments code complexo)
+- ✅ Documentação clara (READMEs, anchor comments code complexo)
 - ✅ Error handling robusto (não crashes silenciosos)
 - ❌ NUNCA gambiarras ("funciona mas não sei por quê")
 
@@ -54,6 +54,87 @@ Todo desenvolvimento deriva do PRD.json. **PRD é a bíblia** - specs completas,
 - ✅ Auth flows seguros (OAuth, 2FA, session management)
 - ❌ NUNCA assumir input confiável
 - ❌ NUNCA expor dados sensíveis logs/errors
+
+### **5. LOGGING & DEBUGGING (CRÍTICO - ATENÇÃO AOS DETALHES)**
+**SEMPRE usar logging estruturado, NUNCA console.log direto:**
+
+- ✅ **USAR:** `authLogger.info('message', { context })` (lib/logger.ts)
+- ✅ **NÍVEIS:** debug (detalhes), info (eventos), warn (avisos), error (erros críticos)
+- ✅ **DEV:** Logs visíveis com timestamps e contexto estruturado
+- ✅ **PROD:** Logs desabilitados (limpo), só errors para monitoring
+- ✅ **FUTURO:** Ready para Sentry/LogRocket integration
+- ❌ **NUNCA:** console.log direto (polui produção, expõe dados, sem estrutura)
+- ❌ **NUNCA:** Logs com dados sensíveis (passwords, tokens, emails completos)
+
+**PRÉ-CONFIGURADOS:**
+```typescript
+import { authLogger } from '@/lib/logger'
+import { onboardingLogger } from '@/lib/logger'
+import { apiLogger } from '@/lib/logger'
+
+// Uso
+authLogger.info('User login initiated', { email: user.email })
+authLogger.error('Login failed', { message: error.message })
+```
+
+**SE VER console.log EXISTENTE:**
+- 🔄 **REFATORAR IMEDIATAMENTE** para usar logger estruturado
+- 📝 Adicionar contexto útil (objetos estruturados, não strings concatenadas)
+- 🎯 Escolher nível correto (debug, info, warn, error)
+
+### **6. USER FEEDBACK (NUNCA "nada acontece")**
+**SEMPRE dar feedback em TODAS as ações do usuário:**
+
+- ✅ **Loading states:** Spinner, disabled button, "Saving...", "Loading..."
+- ✅ **Success feedback:** Toast verde, mensagem clara, redirect automático
+- ✅ **Error feedback:** Toast vermelho, mensagem específica (não genérica), duração 10s+
+- ✅ **Validation feedback:** Real-time (green checkmarks), antes de submeter
+- ❌ **NUNCA:** Botão clicável que "não faz nada" (silencioso)
+- ❌ **NUNCA:** Erros genéricos ("Something went wrong" sem detalhes)
+- ❌ **NUNCA:** Usuário sem saber próximo passo ("e agora?")
+
+**EXEMPLOS RUINS vs BONS:**
+```typescript
+// ❌ RUIM: Nada acontece quando erro
+const handleSubmit = async () => {
+  const { error } = await supabase.from('table').insert(data)
+  if (error) return // Silencioso! User confuso
+}
+
+// ✅ BOM: Feedback claro em todos os casos
+const handleSubmit = async () => {
+  setLoading(true) // Visual feedback
+  authLogger.info('Submitting form', { data })
+
+  const { error } = await supabase.from('table').insert(data)
+
+  if (error) {
+    authLogger.error('Submit failed', { message: error.message })
+    toast({
+      title: "Unable to Save",
+      description: "Please check your connection and try again.",
+      variant: "destructive",
+      duration: 10000
+    })
+    setLoading(false)
+    return
+  }
+
+  authLogger.info('Submit successful')
+  toast({ title: "Saved Successfully!", description: "Your changes have been saved." })
+  setLoading(false)
+  router.push('/dashboard')
+}
+```
+
+**CHECKLIST ANTES DE COMMIT:**
+- [ ] Toda ação do usuário tem loading state?
+- [ ] Todos erros mostram toast específico (não genérico)?
+- [ ] Success cases mostram confirmação visual?
+- [ ] Botões disabled quando não podem ser usados?
+- [ ] Validação real-time para campos obrigatórios?
+- [ ] Usa logger estruturado (não console.log)?
+- [ ] Logs não expõem dados sensíveis?
 
 ### **5. RESOLVER PROBLEMA ICP CLARAMENTE**
 **CRÍTICO - RAZÃO EXISTIR PRODUTO:**
