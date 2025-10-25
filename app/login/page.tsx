@@ -114,10 +114,13 @@ export default function LoginPage() {
   // UX: Clear error messages, loading states, toast feedback
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault()
+    console.log('[Email Login] Starting login process...')
+    console.log('[Email Login] Email:', email)
     setLoading(true)
 
     // Validation
     if (!email || !password) {
+      console.log('[Email Login] Validation failed: missing email or password')
       toast({
         title: "Missing Information",
         description: "Please enter both email and password",
@@ -128,31 +131,53 @@ export default function LoginPage() {
     }
 
     try {
+      console.log('[Email Login] Calling Supabase signInWithPassword...')
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
 
+      console.log('[Email Login] Supabase response received')
+      console.log('[Email Login] Error:', error)
+      console.log('[Email Login] Data:', data)
+
       if (error) {
         console.error('[Email Login Error]:', error)
+        console.error('[Email Login Error Message]:', error.message)
+        console.error('[Email Login Error Status]:', error.status)
 
         // ⚓ ANCHOR: LOGIN_ERROR_MESSAGES
         // REASON: Clear, human-friendly error messages improve UX
         // PATTERN: Map Supabase errors to user-friendly messages
         // UX: Don't blame user, be specific about what went wrong
         // BEST PRACTICE: "Invalid credentials" vs "You entered wrong password"
+        // COMPREHENSIVE: Cover ALL possible auth errors
+        let friendlyTitle = "Unable to Sign In"
         let friendlyMessage = error.message
 
         if (error.message.includes('Invalid login credentials')) {
-          friendlyMessage = "We couldn't find an account with that email and password combination. Please check your credentials and try again."
+          friendlyTitle = "Incorrect Email or Password"
+          friendlyMessage = "The email or password you entered is incorrect. Please check and try again, or use 'Forgot your password?' to reset it."
         } else if (error.message.includes('Email not confirmed')) {
+          friendlyTitle = "Email Not Confirmed"
           friendlyMessage = "Please confirm your email address before logging in. Check your inbox for the confirmation link."
+        } else if (error.message.includes('User not found')) {
+          friendlyTitle = "Account Not Found"
+          friendlyMessage = "We couldn't find an account with this email. Please check the email or sign up for a new account."
+        } else if (error.message.includes('Too many requests')) {
+          friendlyTitle = "Too Many Attempts"
+          friendlyMessage = "You've made too many login attempts. Please wait a few minutes and try again."
+        } else if (error.message.includes('Network')) {
+          friendlyTitle = "Connection Error"
+          friendlyMessage = "We're having trouble connecting. Please check your internet connection and try again."
         }
 
+        console.error('[Email Login] Showing error to user:', friendlyTitle, friendlyMessage)
         toast({
-          title: "Unable to Sign In",
+          title: friendlyTitle,
           description: friendlyMessage,
-          variant: "destructive"
+          variant: "destructive",
+          duration: 10000, // 10 seconds for errors
         })
         setLoading(false)
         return
