@@ -68,7 +68,7 @@ export default function LoginPage() {
       const { url, error } = await response.json()
 
       if (error) {
-        console.error('[OAuth Error]:', error)
+        authLogger.error('Google OAuth failed', { error })
         setLoading(false)
         return
       }
@@ -76,7 +76,7 @@ export default function LoginPage() {
       // Redirect to OAuth provider URL
       window.location.href = url
     } catch (error) {
-      console.error('[OAuth Error]:', error)
+      authLogger.error('Google OAuth exception', { error })
       setLoading(false)
     }
   }
@@ -95,7 +95,7 @@ export default function LoginPage() {
       const { url, error } = await response.json()
 
       if (error) {
-        console.error('[OAuth Error]:', error)
+        authLogger.error('LinkedIn OAuth failed', { error })
         setLoading(false)
         return
       }
@@ -103,7 +103,7 @@ export default function LoginPage() {
       // Redirect to OAuth provider URL
       window.location.href = url
     } catch (error) {
-      console.error('[OAuth Error]:', error)
+      authLogger.error('LinkedIn OAuth exception', { error })
       setLoading(false)
     }
   }
@@ -228,7 +228,7 @@ export default function LoginPage() {
       })
 
       if (error) {
-        console.error('[Forgot Password Error]:', error)
+        authLogger.error('Forgot password failed', { error })
         toast({
           title: "Unable to Send Reset Email",
           description: error.message,
@@ -238,7 +238,7 @@ export default function LoginPage() {
         return
       }
 
-      console.log('[Forgot Password] Reset email sent to:', email)
+      authLogger.info('Password reset email sent', { email })
       setResetEmailSent(true)
       toast({
         title: "Reset Email Sent! 📧",
@@ -247,7 +247,7 @@ export default function LoginPage() {
       })
       setLoading(false)
     } catch (error) {
-      console.error('[Forgot Password Error]:', error)
+      authLogger.error('Forgot password exception', { error })
       toast({
         title: "Something Went Wrong",
         description: "We couldn't send the reset email. Please try again.",
@@ -259,11 +259,7 @@ export default function LoginPage() {
 
   const handleEmailSignup = async (e: React.FormEvent) => {
     e.preventDefault()
-    console.log('[Signup] Button clicked, starting signup process...')
-    console.log('[Signup] Email:', email)
-    console.log('[Signup] Password length:', password.length)
-    console.log('[Signup] Is password valid?', isPasswordValid)
-    console.log('[Signup] Passwords match?', password === confirmPassword)
+    authLogger.info('Email signup initiated', { email, passwordValid: isPasswordValid, passwordsMatch: password === confirmPassword })
     setLoading(true)
 
     // Validation
@@ -308,7 +304,7 @@ export default function LoginPage() {
       })
 
       if (error) {
-        console.error('[Email Signup Error]:', error)
+        authLogger.error('Email signup failed', { error })
 
         // ⚓ ANCHOR: SIGNUP_ERROR_MESSAGES
         // REASON: User-friendly signup error messages
@@ -331,8 +327,7 @@ export default function LoginPage() {
         return
       }
 
-      console.log('[Email Signup] Success:', data.user?.email)
-      console.log('[Email Signup] Confirmation sent?', data.user?.email_confirmed_at === null)
+      authLogger.info('Email signup success', { email: data.user?.email, requiresConfirmation: data.user?.email_confirmed_at === null })
 
       // ⚓ ANCHOR: EMAIL_CONFIRMATION_UX
       // REASON: Supabase hosted requires email confirmation by default
@@ -346,7 +341,7 @@ export default function LoginPage() {
           description: `We sent a confirmation link to ${data.user?.email}. Please check your inbox and click the link to activate your account, then come back here to sign in.`,
           duration: 15000, // 15 seconds - enough time to read
         })
-        console.log('[Email Signup] User needs to confirm email before login')
+        authLogger.debug('Email confirmation required for signup')
 
         // Keep signup form visible with instructions
         // User will manually switch to login after confirming
@@ -356,7 +351,7 @@ export default function LoginPage() {
           title: "Account Created! 🎉",
           description: `Welcome! You can now sign in with ${data.user?.email}`,
         })
-        console.log('[Email Signup] Email confirmation not required, can login immediately')
+        authLogger.debug('Email confirmation not required, user can login immediately')
 
         // Switch to login mode after successful signup
         setAuthMode('email')
@@ -366,7 +361,7 @@ export default function LoginPage() {
 
       setLoading(false)
     } catch (error) {
-      console.error('[Email Signup Error]:', error)
+      authLogger.error('Email signup exception', { error })
       toast({
         title: "Something Went Wrong",
         description: "We couldn't create your account. Please try again.",
