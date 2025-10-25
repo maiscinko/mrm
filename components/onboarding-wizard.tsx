@@ -214,6 +214,7 @@ export function OnboardingWizard({ userEmail = "" }: OnboardingWizardProps) {
       }
 
       console.log("[Onboarding Save] Normalized data:", JSON.stringify(normalizedData, null, 2))
+      console.log("[Onboarding Save] Mentoring style value being sent:", normalizedData.mentoringStyle)
       console.log("[Onboarding Save] Calling API /api/onboarding...")
 
       const response = await fetch("/api/onboarding", {
