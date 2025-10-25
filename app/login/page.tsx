@@ -12,9 +12,9 @@ import { useToast } from "@/hooks/use-toast"
 
 // ⚓ ANCHOR: AUTH_MODE_TYPES
 // REASON: Support both OAuth (Google/LinkedIn) and Email/Password auth
-// PATTERN: Toggle between 'oauth' and 'email' modes with separate UI
+// PATTERN: Toggle between 'oauth', 'email', 'signup', and 'forgot-password' modes with separate UI
 // UX: Users can choose preferred auth method (OAuth for convenience, email for control)
-type AuthMode = 'oauth' | 'email' | 'signup'
+type AuthMode = 'oauth' | 'email' | 'signup' | 'forgot-password'
 
 export default function LoginPage() {
   const t = useTranslations("auth")
@@ -28,6 +28,7 @@ export default function LoginPage() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [passwordFocused, setPasswordFocused] = useState(false)
+  const [resetEmailSent, setResetEmailSent] = useState(false)
   const supabase = createClient()
 
   // ⚓ ANCHOR: PASSWORD_VALIDATION_RULES
@@ -170,6 +171,61 @@ export default function LoginPage() {
       toast({
         title: "Something Went Wrong",
         description: "We're having trouble signing you in. Please try again.",
+        variant: "destructive"
+      })
+      setLoading(false)
+    }
+  }
+
+  // ⚓ ANCHOR: FORGOT_PASSWORD_FLOW
+  // REASON: Allow users to reset password if forgotten
+  // PATTERN: Supabase resetPasswordForEmail sends magic link to email
+  // UX: Clear instructions, email sent confirmation, link to login
+  // SECURITY: Reset link expires after 1 hour, one-time use only
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+
+    // Validation
+    if (!email) {
+      toast({
+        title: "Email Required",
+        description: "Please enter your email address",
+        variant: "destructive"
+      })
+      setLoading(false)
+      return
+    }
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      })
+
+      if (error) {
+        console.error('[Forgot Password Error]:', error)
+        toast({
+          title: "Unable to Send Reset Email",
+          description: error.message,
+          variant: "destructive"
+        })
+        setLoading(false)
+        return
+      }
+
+      console.log('[Forgot Password] Reset email sent to:', email)
+      setResetEmailSent(true)
+      toast({
+        title: "Reset Email Sent! 📧",
+        description: `Check your inbox at ${email}. Click the link to reset your password.`,
+        duration: 15000,
+      })
+      setLoading(false)
+    } catch (error) {
+      console.error('[Forgot Password Error]:', error)
+      toast({
+        title: "Something Went Wrong",
+        description: "We couldn't send the reset email. Please try again.",
         variant: "destructive"
       })
       setLoading(false)
@@ -393,11 +449,19 @@ export default function LoginPage() {
                 )}
               </Button>
 
-              <div className="text-center text-sm">
+              <div className="text-center text-sm space-y-2">
+                <button
+                  type="button"
+                  onClick={() => setAuthMode('forgot-password')}
+                  className="text-primary hover:underline block w-full"
+                  disabled={loading}
+                >
+                  Forgot your password?
+                </button>
                 <button
                   type="button"
                   onClick={() => setAuthMode('signup')}
-                  className="text-primary hover:underline"
+                  className="text-primary hover:underline block w-full"
                   disabled={loading}
                 >
                   Don't have an account? Sign up
@@ -413,6 +477,76 @@ export default function LoginPage() {
               >
                 ← Back to OAuth
               </Button>
+            </form>
+          )}
+
+          {/* Forgot Password Mode */}
+          {authMode === 'forgot-password' && (
+            <form onSubmit={handleForgotPassword} className="space-y-4">
+              {!resetEmailSent ? (
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="reset-email">Email</Label>
+                    <Input
+                      id="reset-email"
+                      type="email"
+                      placeholder="mentor@example.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                      disabled={loading}
+                      autoComplete="email"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Enter your email and we'll send you a link to reset your password
+                    </p>
+                  </div>
+                  <Button type="submit" className="w-full" disabled={loading}>
+                    {loading ? (
+                      <span className="flex items-center gap-2">
+                        <span className="h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent" />
+                        Sending reset link...
+                      </span>
+                    ) : (
+                      'Send Reset Link'
+                    )}
+                  </Button>
+                </>
+              ) : (
+                <div className="space-y-4 text-center">
+                  <div className="rounded-lg border border-green-200 bg-green-50 dark:bg-green-950 dark:border-green-800 p-4">
+                    <p className="text-sm text-green-800 dark:text-green-200">
+                      ✅ Reset email sent to <strong>{email}</strong>
+                    </p>
+                    <p className="text-xs text-green-700 dark:text-green-300 mt-2">
+                      Check your inbox and click the link to reset your password. The link expires in 1 hour.
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      setAuthMode('email')
+                      setResetEmailSent(false)
+                    }}
+                    variant="outline"
+                    className="w-full"
+                  >
+                    ← Back to Sign In
+                  </Button>
+                </div>
+              )}
+
+              {!resetEmailSent && (
+                <Button
+                  type="button"
+                  onClick={() => setAuthMode('email')}
+                  variant="ghost"
+                  className="w-full"
+                  disabled={loading}
+                >
+                  ← Back to Sign In
+                </Button>
+              )}
             </form>
           )}
 
