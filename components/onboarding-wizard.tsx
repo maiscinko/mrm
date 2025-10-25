@@ -90,7 +90,15 @@ const contentVariants = {
   exit: { opacity: 0, x: -50, transition: { duration: 0.2 } },
 }
 
-export function OnboardingWizard() {
+// ⚓ ANCHOR: ONBOARDING_WIZARD_PROPS
+// REASON: Pre-fill email from logged user for better UX
+// PATTERN: Accept userEmail prop, initialize formData with it
+// UX: User sees their email already filled, can edit if needed
+interface OnboardingWizardProps {
+  userEmail?: string
+}
+
+export function OnboardingWizard({ userEmail = "" }: OnboardingWizardProps) {
   const router = useRouter()
   const [currentStep, setCurrentStep] = useState(0)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -98,7 +106,7 @@ export function OnboardingWizard() {
   const [formData, setFormData] = useState<FormData>({
     // Step 1
     fullName: "",
-    email: "",
+    email: userEmail, // Pre-filled from logged user
     linkedinUrl: "",
     instagramUrl: "",
     bio: "",
@@ -380,6 +388,11 @@ export function OnboardingWizard() {
                           onChange={(e) => updateFormData("email", e.target.value)}
                           className="transition-all duration-300 focus:ring-2 focus:ring-primary/20"
                         />
+                        {userEmail && (
+                          <p className="text-xs text-muted-foreground">
+                            ✓ Using your login email. You can edit this if you prefer a different one.
+                          </p>
+                        )}
                       </motion.div>
 
                       <motion.div variants={fadeInUp} className="space-y-2">

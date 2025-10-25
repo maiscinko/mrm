@@ -25,5 +25,9 @@ export default async function OnboardingPage() {
     redirect("/dashboard")
   }
 
-  return <OnboardingWizard />
+  // ⚓ ANCHOR: PRE_FILL_USER_EMAIL
+  // REASON: Better UX - don't ask for email again if user just logged in
+  // PATTERN: Pass logged user email to wizard, pre-fill form
+  // UX: User can edit if they want different email (e.g., business vs personal)
+  return <OnboardingWizard userEmail={user.email || ""} />
 }
