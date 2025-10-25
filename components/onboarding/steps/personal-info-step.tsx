@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast"
 import { createClient } from "@/lib/supabase/client"
 
 const personalInfoSchema = z.object({
+  full_name: z.string().min(3, "Full name is required"),
   email: z.string().email("Valid email is required"),
   whatsapp_country: z.string().default("+55"),
   whatsapp_number: z.string().min(10, "WhatsApp number is required (DDD + number)"),
@@ -25,7 +26,8 @@ const personalInfoSchema = z.object({
   neighborhood: z.string().min(1, "Neighborhood is required"),
   city: z.string().min(1, "City is required"),
   state: z.string().min(2, "State is required").max(2),
-  home_phone: z.string().optional(),
+  home_phone_country: z.string().optional(),
+  home_phone_number: z.string().optional(),
 })
 
 type PersonalInfoInput = z.infer<typeof personalInfoSchema>
@@ -58,6 +60,7 @@ export function PersonalInfoStep({ menteeId, data, onDataChange, onNext }: Perso
     defaultValues: {
       ...data,
       whatsapp_country: "+55", // Default Brazil
+      home_phone_country: "+55", // Default Brazil
     },
   })
 
@@ -115,10 +118,16 @@ export function PersonalInfoStep({ menteeId, data, onDataChange, onNext }: Perso
       // Concatenate country code + number for whatsapp
       const fullWhatsapp = `${formData.whatsapp_country}${formData.whatsapp_number}`
 
-      // Update mentees: replace placeholder email/whatsapp + save personal_info
+      // Concatenate home phone if provided
+      const fullHomePhone = formData.home_phone_number
+        ? `${formData.home_phone_country || "+55"}${formData.home_phone_number}`
+        : ""
+
+      // Update mentees: replace placeholder email/whatsapp + full_name + save personal_info
       const { error } = await supabase
         .from("mentees")
         .update({
+          full_name: formData.full_name, // Replace reference name with real full name
           email: formData.email, // Replace placeholder
           whatsapp: fullWhatsapp, // Replace placeholder (country + number)
           personal_info: {
@@ -134,7 +143,7 @@ export function PersonalInfoStep({ menteeId, data, onDataChange, onNext }: Perso
               state: formData.state,
             },
             phones: {
-              home: formData.home_phone || "",
+              home: fullHomePhone,
             },
           },
         })
@@ -166,8 +175,15 @@ export function PersonalInfoStep({ menteeId, data, onDataChange, onNext }: Perso
       <div className="space-y-4">
         <h3 className="text-sm font-semibold">Contact Information</h3>
         <p className="text-xs text-muted-foreground">
-          Please provide your email and WhatsApp so your mentor can reach you.
+          Please provide your full name and contact details so your mentor can reach you.
         </p>
+
+        <div className="space-y-2">
+          <Label htmlFor="full_name">Full Name *</Label>
+          <Input id="full_name" {...register("full_name")} placeholder="João da Silva Santos" />
+          {errors.full_name && <p className="text-sm text-destructive">{errors.full_name.message}</p>}
+        </div>
+
         <div className="space-y-2">
           <Label htmlFor="email">Email *</Label>
           <Input id="email" type="email" {...register("email")} placeholder="you@example.com" />
@@ -291,8 +307,32 @@ export function PersonalInfoStep({ menteeId, data, onDataChange, onNext }: Perso
       <div className="space-y-4 border-t pt-4">
         <h3 className="text-sm font-semibold">Additional Contact (Optional)</h3>
         <div className="space-y-2">
-          <Label htmlFor="home_phone">Home/Office Phone</Label>
-          <Input id="home_phone" {...register("home_phone")} placeholder="+551133334444" />
+          <Label htmlFor="home_phone_number">Home/Office Phone</Label>
+          <div className="flex gap-2">
+            <Select
+              defaultValue="+55"
+              onValueChange={(value) => setValue("home_phone_country", value)}
+            >
+              <SelectTrigger className="w-[120px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="+55">🇧🇷 +55</SelectItem>
+                <SelectItem value="+1">🇺🇸 +1</SelectItem>
+                <SelectItem value="+351">🇵🇹 +351</SelectItem>
+                <SelectItem value="+34">🇪🇸 +34</SelectItem>
+                <SelectItem value="+44">🇬🇧 +44</SelectItem>
+              </SelectContent>
+            </Select>
+            <div className="flex-1 space-y-0">
+              <Input
+                id="home_phone_number"
+                {...register("home_phone_number")}
+                placeholder="1133334444"
+                className="w-full"
+              />
+            </div>
+          </div>
           <p className="text-xs text-muted-foreground">Optional landline or office phone</p>
         </div>
       </div>
