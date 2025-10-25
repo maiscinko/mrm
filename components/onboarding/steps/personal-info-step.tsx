@@ -7,13 +7,15 @@ import { z } from "zod"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Loader2 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { createClient } from "@/lib/supabase/client"
 
 const personalInfoSchema = z.object({
   email: z.string().email("Valid email is required"),
-  whatsapp: z.string().min(10, "WhatsApp is required (with country code)"),
+  whatsapp_country: z.string().default("+55"),
+  whatsapp_number: z.string().min(10, "WhatsApp number is required (DDD + number)"),
   cpf: z.string().min(11, "CPF must have 11 digits"),
   rg: z.string().min(1, "RG is required"),
   cep: z.string().min(8, "CEP must have 8 digits"),
@@ -23,7 +25,6 @@ const personalInfoSchema = z.object({
   neighborhood: z.string().min(1, "Neighborhood is required"),
   city: z.string().min(1, "City is required"),
   state: z.string().min(2, "State is required").max(2),
-  mobile_phone: z.string().min(10, "Mobile phone is required"),
   home_phone: z.string().optional(),
 })
 
@@ -54,7 +55,10 @@ export function PersonalInfoStep({ menteeId, data, onDataChange, onNext }: Perso
     watch,
   } = useForm<PersonalInfoInput>({
     resolver: zodResolver(personalInfoSchema),
-    defaultValues: data,
+    defaultValues: {
+      ...data,
+      whatsapp_country: "+55", // Default Brazil
+    },
   })
 
   const cep = watch("cep")
@@ -108,12 +112,15 @@ export function PersonalInfoStep({ menteeId, data, onDataChange, onNext }: Perso
   const onSubmit = async (formData: PersonalInfoInput) => {
     setLoading(true)
     try {
+      // Concatenate country code + number for whatsapp
+      const fullWhatsapp = `${formData.whatsapp_country}${formData.whatsapp_number}`
+
       // Update mentees: replace placeholder email/whatsapp + save personal_info
       const { error } = await supabase
         .from("mentees")
         .update({
           email: formData.email, // Replace placeholder
-          whatsapp: formData.whatsapp, // Replace placeholder
+          whatsapp: fullWhatsapp, // Replace placeholder (country + number)
           personal_info: {
             cpf: formData.cpf,
             rg: formData.rg,
@@ -127,7 +134,6 @@ export function PersonalInfoStep({ menteeId, data, onDataChange, onNext }: Perso
               state: formData.state,
             },
             phones: {
-              mobile: formData.mobile_phone,
               home: formData.home_phone || "",
             },
           },
@@ -162,19 +168,41 @@ export function PersonalInfoStep({ menteeId, data, onDataChange, onNext }: Perso
         <p className="text-xs text-muted-foreground">
           Please provide your email and WhatsApp so your mentor can reach you.
         </p>
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="email">Email *</Label>
-            <Input id="email" type="email" {...register("email")} placeholder="you@example.com" />
-            {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
-          </div>
+        <div className="space-y-2">
+          <Label htmlFor="email">Email *</Label>
+          <Input id="email" type="email" {...register("email")} placeholder="you@example.com" />
+          {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
+        </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="whatsapp">WhatsApp *</Label>
-            <Input id="whatsapp" {...register("whatsapp")} placeholder="+5511999999999" />
-            {errors.whatsapp && <p className="text-sm text-destructive">{errors.whatsapp.message}</p>}
-            <p className="text-xs text-muted-foreground">Include country code (e.g., +55 for Brazil)</p>
+        <div className="space-y-2">
+          <Label htmlFor="whatsapp_number">WhatsApp *</Label>
+          <div className="flex gap-2">
+            <Select
+              defaultValue="+55"
+              onValueChange={(value) => setValue("whatsapp_country", value)}
+            >
+              <SelectTrigger className="w-[120px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="+55">🇧🇷 +55</SelectItem>
+                <SelectItem value="+1">🇺🇸 +1</SelectItem>
+                <SelectItem value="+351">🇵🇹 +351</SelectItem>
+                <SelectItem value="+34">🇪🇸 +34</SelectItem>
+                <SelectItem value="+44">🇬🇧 +44</SelectItem>
+              </SelectContent>
+            </Select>
+            <div className="flex-1 space-y-0">
+              <Input
+                id="whatsapp_number"
+                {...register("whatsapp_number")}
+                placeholder="11999999999"
+                className="w-full"
+              />
+            </div>
           </div>
+          {errors.whatsapp_number && <p className="text-sm text-destructive">{errors.whatsapp_number.message}</p>}
+          <p className="text-xs text-muted-foreground">Enter DDD + number (e.g., 11999999999 for São Paulo)</p>
         </div>
       </div>
 
@@ -259,20 +287,13 @@ export function PersonalInfoStep({ menteeId, data, onDataChange, onNext }: Perso
         </div>
       </div>
 
-      {/* Phones */}
+      {/* Additional Phone */}
       <div className="space-y-4 border-t pt-4">
-        <h3 className="text-sm font-semibold">Contact Phones</h3>
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="mobile_phone">Mobile Phone *</Label>
-            <Input id="mobile_phone" {...register("mobile_phone")} placeholder="+5511999999999" />
-            {errors.mobile_phone && <p className="text-sm text-destructive">{errors.mobile_phone.message}</p>}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="home_phone">Home Phone (optional)</Label>
-            <Input id="home_phone" {...register("home_phone")} placeholder="+551133334444" />
-          </div>
+        <h3 className="text-sm font-semibold">Additional Contact (Optional)</h3>
+        <div className="space-y-2">
+          <Label htmlFor="home_phone">Home/Office Phone</Label>
+          <Input id="home_phone" {...register("home_phone")} placeholder="+551133334444" />
+          <p className="text-xs text-muted-foreground">Optional landline or office phone</p>
         </div>
       </div>
 
