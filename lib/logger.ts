@@ -16,9 +16,21 @@ class Logger {
   private config: LoggerConfig
 
   constructor(prefix: string = 'App') {
+    // ⚓ ANCHOR: CLIENT_SIDE_DEV_CHECK
+    // REASON: process.env.NODE_ENV not available client-side in Next.js
+    // PATTERN: Check if running in dev mode using multiple signals
+    // DEV SIGNALS: localhost, dev domain, or explicit NEXT_PUBLIC flag
+    const isDevEnvironment =
+      process.env.NODE_ENV === 'development' || // Server-side
+      (typeof window !== 'undefined' && (
+        window.location.hostname === 'localhost' ||
+        window.location.hostname.includes('-dev.') ||
+        window.location.port === '3000'
+      ))
+
     this.config = {
       // Only enable in development
-      enabled: process.env.NODE_ENV === 'development',
+      enabled: isDevEnvironment,
       level: (process.env.NEXT_PUBLIC_LOG_LEVEL as LogLevel) || 'debug',
       prefix,
     }
