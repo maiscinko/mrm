@@ -9,6 +9,7 @@ import { useTranslations } from "next-intl"
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useToast } from "@/hooks/use-toast"
+import { authLogger } from "@/lib/logger"
 
 // ⚓ ANCHOR: AUTH_MODE_TYPES
 // REASON: Support both OAuth (Google/LinkedIn) and Email/Password auth
@@ -114,13 +115,12 @@ export default function LoginPage() {
   // UX: Clear error messages, loading states, toast feedback
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    console.log('[Email Login] Starting login process...')
-    console.log('[Email Login] Email:', email)
+    authLogger.info('Email login initiated', { email })
     setLoading(true)
 
     // Validation
     if (!email || !password) {
-      console.log('[Email Login] Validation failed: missing email or password')
+      authLogger.warn('Login validation failed: missing credentials')
       toast({
         title: "Missing Information",
         description: "Please enter both email and password",
@@ -131,20 +131,20 @@ export default function LoginPage() {
     }
 
     try {
-      console.log('[Email Login] Calling Supabase signInWithPassword...')
+      authLogger.debug('Calling Supabase signInWithPassword')
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
 
-      console.log('[Email Login] Supabase response received')
-      console.log('[Email Login] Error:', error)
-      console.log('[Email Login] Data:', data)
+      authLogger.debug('Supabase response received', { hasError: !!error, hasUser: !!data.user })
 
       if (error) {
-        console.error('[Email Login Error]:', error)
-        console.error('[Email Login Error Message]:', error.message)
-        console.error('[Email Login Error Status]:', error.status)
+        authLogger.error('Login failed', {
+          message: error.message,
+          status: error.status,
+          email
+        })
 
         // ⚓ ANCHOR: LOGIN_ERROR_MESSAGES
         // REASON: Clear, human-friendly error messages improve UX
@@ -172,7 +172,7 @@ export default function LoginPage() {
           friendlyMessage = "We're having trouble connecting. Please check your internet connection and try again."
         }
 
-        console.error('[Email Login] Showing error to user:', friendlyTitle, friendlyMessage)
+        authLogger.error('Showing login error to user', { title: friendlyTitle, message: friendlyMessage })
         toast({
           title: friendlyTitle,
           description: friendlyMessage,
@@ -183,7 +183,7 @@ export default function LoginPage() {
         return
       }
 
-      console.log('[Email Login] Success:', data.user?.email)
+      authLogger.info('Login successful', { email: data.user?.email })
       toast({
         title: "Welcome Back!",
         description: `Signed in as ${data.user?.email}`,
@@ -192,7 +192,7 @@ export default function LoginPage() {
       // Redirect to dashboard
       router.push('/dashboard')
     } catch (error) {
-      console.error('[Email Login Error]:', error)
+      authLogger.error('Unexpected login error', { error })
       toast({
         title: "Something Went Wrong",
         description: "We're having trouble signing you in. Please try again.",
