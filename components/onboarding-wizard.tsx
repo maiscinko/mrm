@@ -197,6 +197,9 @@ export function OnboardingWizard({ userEmail = "" }: OnboardingWizardProps) {
   }
 
   const saveOnboardingData = async () => {
+    console.log("[Onboarding Save] Button clicked - starting save process")
+    console.log("[Onboarding Save] Current step:", currentStep)
+    console.log("[Onboarding Save] Is submitting:", isSubmitting)
     setIsSubmitting(true)
 
     try {
